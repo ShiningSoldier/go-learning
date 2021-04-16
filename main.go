@@ -30,6 +30,9 @@ var statuses = map[int]string{
 }
 
 func main() {
+	defer database.Close()
+	createDatabase()
+
 	router := mux.NewRouter()
 
 	router.HandleFunc("/tasks", getTasks).Methods("GET")
@@ -41,10 +44,17 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8765", router))
 }
 
+func createDatabase() {
+	statement, err := database.Prepare("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, until TEXT, status INTEGER NOT NULL);")
+	checkErr(err)
+	statement.Exec()
+}
+
 func getTasks(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json")
 	checkErr(err)
 
-	rows, err := database.Query("SELECT id, name, status FROM tasks")
+	rows, err := database.Query("SELECT id, name, until, status FROM tasks")
 	defer rows.Close()
 	checkErr(err)
 	var id int
@@ -53,13 +63,16 @@ func getTasks(res http.ResponseWriter, req *http.Request) {
 	var status int
 
 	for rows.Next() {
-		err = rows.Scan(&id, &name, &status, &until)
+		err = rows.Scan(&id, &name, &until, &status)
 		checkErr(err)
-		json.NewEncoder(res).Encode(fmt.Sprintf("Id: %d, name: %s, valid until: %s, status: %s", id, name, until, statuses[status]))
+		res.WriteHeader(http.StatusOK)
+		res.Write([]byte(fmt.Sprintf(`{"Task": "%v"}`, fmt.Sprintf("Id: %d, name: %s, valid until: %s, status: %s", id, name, until, statuses[status]))))
 	}
 }
 
 func getTask(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json")
+
 	var params = mux.Vars(req)
 	var requestId, err = strconv.Atoi(params["id"])
 	var (
@@ -78,14 +91,15 @@ func getTask(res http.ResponseWriter, req *http.Request) {
 	for row.Next() {
 		err := row.Scan(&id, &name, &description, &until, &status)
 		checkErr(err)
-
-		json.NewEncoder(res).Encode(fmt.Sprintf("%d %s", id, name))
+		res.WriteHeader(http.StatusOK)
+		res.Write([]byte(fmt.Sprintf(`{"Task": "%v"}`, fmt.Sprintf("Id: %d, name: %s, valid until: %s, status: %s", id, name, until, statuses[status]))))
 	}
 }
 
 func addTask(res http.ResponseWriter, req *http.Request) {
-	var task Task
+	res.Header().Set("Content-Type", "application/json")
 
+	var task Task
 	json.NewDecoder(req.Body).Decode(&task)
 
 	insertQuery := `INSERT INTO tasks(name, description, until, status) VALUES (?, ?, ?, ?)`
@@ -96,10 +110,13 @@ func addTask(res http.ResponseWriter, req *http.Request) {
 	_, errExec := statement.Exec(task.Name, task.Description, task.Until, task.Status)
 	checkErr(errExec)
 
-	json.NewEncoder(res).Encode("Success")
+	res.WriteHeader(http.StatusCreated)
+	res.Write([]byte(`{"Result": "Success"}`))
 }
 
 func updateTask(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json")
+
 	var params = mux.Vars(req)
 	var id, err = strconv.Atoi(params["id"])
 	checkErr(err)
@@ -115,10 +132,13 @@ func updateTask(res http.ResponseWriter, req *http.Request) {
 	_, errExec := statement.Exec(task.Name, task.Description, task.Until, task.Status, id)
 	checkErr(errExec)
 
-	json.NewEncoder(res).Encode("Success")
+	res.WriteHeader(http.StatusAccepted)
+	res.Write([]byte(`{"Result": "Success"}`))
 }
 
 func deleteTask(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json")
+
 	var params = mux.Vars(req)
 	var id, err = strconv.Atoi(params["id"])
 	checkErr(err)
@@ -131,7 +151,8 @@ func deleteTask(res http.ResponseWriter, req *http.Request) {
 	_, errExec := statement.Exec(id)
 	checkErr(errExec)
 
-	json.NewEncoder(res).Encode("Success")
+	res.WriteHeader(http.StatusOK)
+	res.Write([]byte(`{"Result": "Success"}`))
 }
 
 func checkErr(err error) {
