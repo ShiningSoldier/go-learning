@@ -10,11 +10,9 @@ import (
 
 func main() {
 	var toCompress string = "Helllllo world"
-	var toDecompress string = "He#5#lo world"
+	var toDecompress string = "He#5#lo worl#7#d"
 
-	fmt.Printf(compress(toCompress))
-	fmt.Printf(decompress(toDecompress))
-
+	fmt.Printf(fmt.Sprintf("Compressed string: %s; decompressed string: %s", compress(toCompress), decompress(toDecompress)))
 }
 
 func compress(s string) string {
@@ -45,21 +43,26 @@ func compress(s string) string {
 
 func decompress(s string) string {
 	var regString = regexp.MustCompile(`#\d#[a-zA-Z]`)
-	var foundString = regString.FindString(s)
-	var regNum = regexp.MustCompile(`(\d)`)
-	var foundNum = regNum.FindString(foundString)
-	var lastCharacter = foundString[len(foundString)-1:]
-	strToNum, err := strconv.Atoi(foundNum)
-	if err != nil {
-		log.Fatal(err)
+	var splitString = strings.Split(s, " ")
+	var result []string
+
+	for _, value := range splitString {
+		var foundString = regString.FindString(value)
+		var regNum = regexp.MustCompile(`(\d)`)
+		var foundNum = regNum.FindString(foundString)
+		var lastCharacter = foundString[len(foundString)-1:]
+		strToNum, err := strconv.Atoi(foundNum)
+		if err != nil {
+			log.Fatal(err)
+		}
+		tempArray := make([]string, strToNum)
+
+		for i := range tempArray {
+			tempArray[i] = lastCharacter
+		}
+
+		result = append(result, regString.ReplaceAllString(value, strings.Join(tempArray, "")))
 	}
-	tempArray := make([]string, strToNum)
 
-	for i := range tempArray {
-		tempArray[i] = lastCharacter
-	}
-
-	var result = regString.ReplaceAllString(s, strings.Join(tempArray, ""))
-
-	return result
+	return strings.Join(result, " ")
 }
