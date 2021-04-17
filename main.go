@@ -45,7 +45,7 @@ func main() {
 }
 
 func createDatabase() {
-	statement, err := database.Prepare("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, until TEXT, status INTEGER NOT NULL);")
+	statement, err := database.Prepare("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, until DATETIME NOT NULL, status INTEGER NOT NULL);")
 	checkErr(err)
 	statement.Exec()
 }
