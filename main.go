@@ -17,7 +17,7 @@ type Task struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Until       string `json:"until"`
+	DueDate     string `json:"dueDate"`
 	Status      int    `json:"status"`
 }
 
@@ -45,7 +45,7 @@ func main() {
 }
 
 func createDatabase() {
-	statement, err := database.Prepare("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, until DATETIME NOT NULL, status INTEGER NOT NULL);")
+	statement, err := database.Prepare("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, dueDate DATETIME NOT NULL, status INTEGER NOT NULL);")
 	checkErr(err)
 	statement.Exec()
 }
@@ -54,19 +54,19 @@ func getTasks(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	checkErr(err)
 
-	rows, err := database.Query("SELECT id, name, until, status FROM tasks")
+	rows, err := database.Query("SELECT id, name, dueDate, status FROM tasks")
 	defer rows.Close()
 	checkErr(err)
 	var id int
 	var name string
-	var until string
+	var dueDate string
 	var status int
 
 	for rows.Next() {
-		err = rows.Scan(&id, &name, &until, &status)
+		err = rows.Scan(&id, &name, &dueDate, &status)
 		checkErr(err)
 		res.WriteHeader(http.StatusOK)
-		res.Write([]byte(fmt.Sprintf(`{"Task": "%v"}`, fmt.Sprintf("Id: %d, name: %s, valid until: %s, status: %s", id, name, until, statuses[status]))))
+		res.Write([]byte(fmt.Sprintf(`{"Task": "%v"}`, fmt.Sprintf("Id: %d, name: %s, valid until: %s, status: %s", id, name, dueDate, statuses[status]))))
 	}
 }
 
@@ -79,7 +79,7 @@ func getTask(res http.ResponseWriter, req *http.Request) {
 		id          int
 		name        string
 		description string
-		until       string
+		dueDate     string
 		status      int
 	)
 	checkErr(err)
@@ -89,10 +89,10 @@ func getTask(res http.ResponseWriter, req *http.Request) {
 	defer row.Close()
 
 	for row.Next() {
-		err := row.Scan(&id, &name, &description, &until, &status)
+		err := row.Scan(&id, &name, &description, &dueDate, &status)
 		checkErr(err)
 		res.WriteHeader(http.StatusOK)
-		res.Write([]byte(fmt.Sprintf(`{"Task": "%v"}`, fmt.Sprintf("Id: %d, name: %s, valid until: %s, status: %s", id, name, until, statuses[status]))))
+		res.Write([]byte(fmt.Sprintf(`{"Task": "%v"}`, fmt.Sprintf("Id: %d, name: %s, valid until: %s, status: %s", id, name, dueDate, statuses[status]))))
 	}
 }
 
@@ -102,12 +102,12 @@ func addTask(res http.ResponseWriter, req *http.Request) {
 	var task Task
 	json.NewDecoder(req.Body).Decode(&task)
 
-	insertQuery := `INSERT INTO tasks(name, description, until, status) VALUES (?, ?, ?, ?)`
+	insertQuery := `INSERT INTO tasks(name, description, dueDate, status) VALUES (?, ?, ?, ?)`
 
 	statement, err := database.Prepare(insertQuery)
 	checkErr(err)
 
-	_, errExec := statement.Exec(task.Name, task.Description, task.Until, task.Status)
+	_, errExec := statement.Exec(task.Name, task.Description, task.DueDate, task.Status)
 	checkErr(errExec)
 
 	res.WriteHeader(http.StatusCreated)
@@ -124,12 +124,12 @@ func updateTask(res http.ResponseWriter, req *http.Request) {
 
 	json.NewDecoder(req.Body).Decode(&task)
 
-	updateQuery := `UPDATE tasks SET name = ?, description = ?, until = ?, status = ? WHERE id = ?`
+	updateQuery := `UPDATE tasks SET name = ?, description = ?, dueDate = ?, status = ? WHERE id = ?`
 
 	statement, errPrepare := database.Prepare(updateQuery)
 	checkErr(errPrepare)
 
-	_, errExec := statement.Exec(task.Name, task.Description, task.Until, task.Status, id)
+	_, errExec := statement.Exec(task.Name, task.Description, task.DueDate, task.Status, id)
 	checkErr(errExec)
 
 	res.WriteHeader(http.StatusAccepted)
