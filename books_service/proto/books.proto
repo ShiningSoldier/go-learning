@@ -1,0 +1,72 @@
+syntax = "proto3";
+option go_package = "./";
+
+package proto;
+
+message AddBookRequest {
+  string book_name = 1;
+  string category_id = 2;
+  int64 author_id = 3;
+}
+
+message AddCategoryRequest {
+  string name = 1;
+  int64 parent_uuid = 2;
+}
+
+message AddAuthorRequest {
+  string name = 1;
+}
+
+message UpdateBookRequest {
+  int64 book_uuid = 1;
+  string book_name = 2;
+  string category_id = 3;
+  int64 author_id = 4;
+}
+
+message BookId {
+  int64 book_uuid = 1;
+}
+
+message BookData {
+  string result = 1;
+}
+
+message AuthorId {
+  int64 author_id = 1;
+}
+
+message AuthorData {
+  string result = 1;
+}
+
+message CategoryId {
+  int64 category_id = 1;
+}
+
+message CategoryData {
+  string result = 1;
+}
+
+message PageNumber {
+  int64 page_number = 1;
+}
+
+message Response {
+  bool success = 1;
+}
+
+service BooksService {
+  rpc AddBook(AddBookRequest) returns (Response);
+  rpc UpdateBook(UpdateBookRequest) returns (Response);
+  rpc DeleteBook(BookId) returns (Response);
+  rpc ShowBook(BookId) returns (BookData);
+  rpc FilterByAuthor(AuthorId) returns (BookData);
+  rpc FilterByCategory(CategoryId) returns (BookData);
+  rpc Paginate(PageNumber) returns (BookData);
+  rpc AddAuthor(AddAuthorRequest) returns (Response);
+  rpc AddCategory(AddCategoryRequest) returns (Response);
+  rpc ShowAuthor(AuthorId) returns (AuthorData);
+  rpc ShowCategory(CategoryId) returns (CategoryData);
+}
