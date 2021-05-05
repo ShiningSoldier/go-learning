@@ -124,6 +124,91 @@ func main() {
 		}
 	})
 
+	g.GET("/show-author/:author_uuid", func(ctx *gin.Context) {
+		authorUuid, err := strconv.ParseUint(ctx.Param("author_uuid"), 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param author_uuid"})
+		}
+
+		req := &proto.AuthorId{AuthorUuid: int64(authorUuid)}
+
+		if response, err := client.ShowAuthor(ctx, req); err == nil {
+			ctx.JSON(http.StatusOK, gin.H{
+				"result": fmt.Sprint(response.Result),
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+
+	g.GET("/show-category/:category_uuid", func(ctx *gin.Context) {
+		bookUuid, err := strconv.ParseUint(ctx.Param("category_uuid"), 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param category_uuid"})
+		}
+
+		req := &proto.CategoryId{CategoryUuid: int64(bookUuid)}
+
+		if response, err := client.ShowCategory(ctx, req); err == nil {
+			ctx.JSON(http.StatusOK, gin.H{
+				"result": fmt.Sprint(response.Result),
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+
+	g.GET("/filter-by-author/:author_uuid", func(ctx *gin.Context) {
+		authorUuid, err := strconv.ParseUint(ctx.Param("author_uuid"), 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param author_uuid"})
+		}
+
+		req := &proto.AuthorId{AuthorUuid: int64(authorUuid)}
+
+		if response, err := client.FilterByAuthor(ctx, req); err == nil {
+			ctx.JSON(http.StatusOK, gin.H{
+				"result": fmt.Sprint(response.Result),
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+
+	g.GET("/filter-by-category/:category_uuid", func(ctx *gin.Context) {
+		categoryUuid, err := strconv.ParseUint(ctx.Param("category_uuid"), 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param author_uuid"})
+		}
+
+		req := &proto.CategoryId{CategoryUuid: int64(categoryUuid)}
+
+		if response, err := client.FilterByCategory(ctx, req); err == nil {
+			ctx.JSON(http.StatusOK, gin.H{
+				"result": fmt.Sprint(response.Result),
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+
+	g.GET("/paginate/:page_number", func(ctx *gin.Context) {
+		pageNumber, err := strconv.ParseUint(ctx.Param("page_number"), 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param page_number"})
+		}
+
+		req := &proto.PageNumber{PageNumber: int64(pageNumber)}
+
+		if response, err := client.Paginate(ctx, req); err == nil {
+			ctx.JSON(http.StatusOK, gin.H{
+				"result": fmt.Sprint(response.Result),
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+
 	if err := g.Run(":8080"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}

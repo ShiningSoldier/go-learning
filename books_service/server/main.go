@@ -129,6 +129,137 @@ func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest)
 	return &proto.Response{Success: true}, nil
 }
 
+func (s *server) ShowAuthor(ctx context.Context, request *proto.AuthorId) (*proto.AuthorData, error) {
+	authorUuid := request.GetAuthorUuid()
+
+	selectQuery := `SELECT uuid, name, deleted_at FROM authors WHERE authors.uuid = ?`
+
+	row, err := db.Query(selectQuery, authorUuid)
+	checkErr(err)
+	var (
+		uuid      int
+		name      string
+		deletedAt sql.NullString
+		result    string
+	)
+
+	for row.Next() {
+		err := row.Scan(&uuid, &name, &deletedAt)
+		checkErr(err)
+		if deletedAt.Valid {
+			result = fmt.Sprintf("This author was deleted at %s", deletedAt.String)
+		} else {
+			result = fmt.Sprintf("Author id: %d, name: %s", uuid, name)
+		}
+	}
+
+	return &proto.AuthorData{Result: result}, nil
+}
+
+func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*proto.CategoryData, error) {
+	categoryUuid := request.GetCategoryUuid()
+
+	selectQuery := `SELECT uuid, name, deleted_at, parent_uuid FROM categories WHERE categories.uuid = ?`
+
+	row, err := db.Query(selectQuery, categoryUuid)
+	checkErr(err)
+	var (
+		uuid       int
+		name       string
+		deletedAt  sql.NullString
+		parentUuid sql.NullString
+		result     string
+	)
+
+	for row.Next() {
+		err := row.Scan(&uuid, &name, &deletedAt, &parentUuid)
+		checkErr(err)
+		parent := "no parent"
+		if parentUuid.Valid && parentUuid.String != "0" {
+			parent = parentUuid.String
+		}
+		if deletedAt.Valid {
+			result = fmt.Sprintf("This category was deleted at %s", deletedAt.String)
+		} else {
+			result = fmt.Sprintf("Category id: %d, name: %s, parent: %s", uuid, name, parent)
+		}
+	}
+
+	return &proto.CategoryData{Result: result}, nil
+}
+
+func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*proto.BookData, error) {
+	authorUuid := request.GetAuthorUuid()
+
+	selectQuery := `SELECT books.uuid, books.name FROM books WHERE books.deleted_at IS NULL AND books.author_id = ?`
+
+	row, err := db.Query(selectQuery, authorUuid)
+	checkErr(err)
+	var (
+		uuid   int
+		name   string
+		result string
+	)
+
+	for row.Next() {
+		err := row.Scan(&uuid, &name)
+		checkErr(err)
+		result = result + fmt.Sprintf("Book uuid: %d, book name: %s, ", uuid, name)
+	}
+
+	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
+}
+
+func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId) (*proto.BookData, error) {
+	categoryUuid := request.GetCategoryUuid()
+
+	selectQuery := `SELECT books.uuid, books.name FROM books
+    INNER JOIN books_categories on books_categories.book_uuid = books.uuid
+    INNER JOIN categories ON categories.uuid = books_categories.category_uuid
+    WHERE books.deleted_at IS NULL AND categories.uuid = ?`
+
+	row, err := db.Query(selectQuery, categoryUuid)
+	checkErr(err)
+	var (
+		uuid   int
+		name   string
+		result string
+	)
+
+	for row.Next() {
+		err := row.Scan(&uuid, &name)
+		checkErr(err)
+		result = result + fmt.Sprintf("Book uuid: %d, book name: %s, ", uuid, name)
+	}
+
+	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
+}
+
+func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*proto.BookData, error) {
+	pageNumber := request.GetPageNumber()
+	offset := (pageNumber - 1) * 10
+
+	selectQuery := fmt.Sprintf("SELECT books.uuid, books.name, authors.name FROM books INNER JOIN authors ON authors.uuid = books.author_id WHERE books.deleted_at IS NULL LIMIT 10 OFFSET %d", offset)
+
+	row, err := db.Query(selectQuery)
+	checkErr(err)
+	var (
+		uuid       int
+		name       string
+		authorName string
+		result     string
+	)
+
+	for row.Next() {
+		err := row.Scan(&uuid, &name, &authorName)
+		checkErr(err)
+
+		result = result + fmt.Sprintf("Book uuid: %d, book name: %s, ", uuid, name)
+	}
+
+	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
+}
+
 func checkErr(err error) {
 	if err != nil {
 		log.Fatal(err)

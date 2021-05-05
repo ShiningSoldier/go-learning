@@ -34,7 +34,7 @@ message BookData {
 }
 
 message AuthorId {
-  int64 author_id = 1;
+  int64 author_uuid = 1;
 }
 
 message AuthorData {
@@ -42,7 +42,7 @@ message AuthorData {
 }
 
 message CategoryId {
-  int64 category_id = 1;
+  int64 category_uuid = 1;
 }
 
 message CategoryData {
