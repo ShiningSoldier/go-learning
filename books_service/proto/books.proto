@@ -25,6 +25,17 @@ message UpdateBookRequest {
   int64 author_id = 4;
 }
 
+message UpdateAuthorRequest {
+  int64 author_uuid = 1;
+  string author_name = 2;
+}
+
+message UpdateCategoryRequest {
+  int64 category_uuid = 1;
+  string category_name = 2;
+  int64 parent_uuid = 3;
+}
+
 message BookId {
   int64 book_uuid = 1;
 }
@@ -68,5 +79,9 @@ service BooksService {
   rpc AddAuthor(AddAuthorRequest) returns (Response);
   rpc AddCategory(AddCategoryRequest) returns (Response);
   rpc ShowAuthor(AuthorId) returns (AuthorData);
+  rpc UpdateAuthor(UpdateAuthorRequest) returns (Response);
+  rpc UpdateCategory(UpdateCategoryRequest) returns (Response);
   rpc ShowCategory(CategoryId) returns (CategoryData);
+  rpc DeleteCategory(CategoryId) returns (Response);
+  rpc DeleteAuthor(AuthorId) returns (Response);
 }

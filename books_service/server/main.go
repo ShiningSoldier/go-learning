@@ -47,35 +47,49 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 	row, err := db.Exec(insertQuery, name, author)
 	checkErr(err)
 	lastInsertedId, err := row.LastInsertId()
-
-	_, err = db.Exec("DELETE FROM books_categories WHERE book_uuid = ?", lastInsertedId)
 	checkErr(err)
 
-	for _, item := range categoriesSlice {
-		_, err := db.Exec("INSERT INTO books_categories(book_uuid, category_uuid) VALUES(?,?)", lastInsertedId, item)
-		checkErr(err)
-	}
+	err = addCategories(lastInsertedId, categoriesSlice)
+	checkErr(err)
 
 	return &proto.Response{Success: true}, nil
 }
 
 func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookRequest) (*proto.Response, error) {
-	bookUuid, name, category, author, currentTimestamp := request.GetBookUuid(), request.GetBookName(), request.GetCategoryId(), request.GetAuthorId(), time.Now()
-	updateQuery := `UPDATE books SET name = ?, category_id = ?, author_id = ?, updated_at = ? WHERE uuid = ?`
+	bookUuid, name, category, author, currentTimestamp := request.GetBookUuid(), request.GetBookName(), request.GetCategoryId(), request.GetAuthorId(), time.Now().Format("2006-01-02 15:04:05")
+	categoriesSlice := strings.Split(category, ",")
+	updateQuery := `UPDATE books SET name = ?, author_id = ?, updated_at = ? WHERE uuid = ?`
 
-	_, err := db.Exec(updateQuery, name, category, author, currentTimestamp, bookUuid)
+	_, err := db.Exec(updateQuery, name, author, currentTimestamp, bookUuid)
+	checkErr(err)
+
+	err = addCategories(bookUuid, categoriesSlice)
 	checkErr(err)
 
 	return &proto.Response{Success: true}, nil
 }
 
+func addCategories(bookUuid int64, categoriesSlice []string) error {
+	_, err = db.Exec("DELETE FROM books_categories WHERE book_uuid = ?", bookUuid)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range categoriesSlice {
+		_, err := db.Exec("INSERT INTO books_categories(book_uuid, category_uuid) VALUES(?,?)", bookUuid, item)
+		if err != nil {
+			return err
+		}
+	}
+
+	return err
+}
+
 func (s *server) DeleteBook(ctx context.Context, request *proto.BookId) (*proto.Response, error) {
 	bookUuid := request.GetBookUuid()
 
-	deleteQuery := `UPDATE books SET updated_at = ?, deleted_at = ? WHERE uuid = ?`
-	currentTimestamp := time.Now()
+	err := deleteEntity("books", bookUuid)
 
-	_, err := db.Exec(deleteQuery, currentTimestamp, currentTimestamp, bookUuid)
 	checkErr(err)
 
 	return &proto.Response{Success: true}, nil
@@ -84,20 +98,25 @@ func (s *server) DeleteBook(ctx context.Context, request *proto.BookId) (*proto.
 func (s *server) ShowBook(ctx context.Context, request *proto.BookId) (*proto.BookData, error) {
 	bookUuid := request.GetBookUuid()
 
-	selectQuery := `SELECT books.uuid, books.name, books.deleted_at, authors.name FROM books INNER JOIN authors ON authors.uuid = books.author_id WHERE books.uuid = ?`
+	selectQuery := `SELECT books.uuid, books.name, books.deleted_at, authors.name, categories.name FROM books
+    INNER JOIN authors ON authors.uuid = books.author_id
+    LEFT JOIN books_categories ON books_categories.book_uuid = books.uuid
+    LEFT JOIN categories ON categories.uuid = books_categories.category_uuid
+    WHERE books.uuid = ?`
 
 	row, err := db.Query(selectQuery, bookUuid)
 	checkErr(err)
 	var (
-		uuid       int
-		name       string
-		deletedAt  sql.NullString
-		authorName string
-		result     string
+		uuid         int
+		name         string
+		deletedAt    sql.NullString
+		authorName   string
+		categoryName string
+		result       string
 	)
 
 	for row.Next() {
-		err := row.Scan(&uuid, &name, &deletedAt, &authorName)
+		err := row.Scan(&uuid, &name, &deletedAt, &authorName, &categoryName)
 		checkErr(err)
 		if deletedAt.Valid {
 			result = fmt.Sprintf("This book was deleted at %s", deletedAt.String)
@@ -258,6 +277,56 @@ func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*prot
 	}
 
 	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
+}
+
+func (s *server) DeleteAuthor(ctx context.Context, request *proto.AuthorId) (*proto.Response, error) {
+	authorUuid := request.GetAuthorUuid()
+
+	err := deleteEntity("authors", authorUuid)
+
+	checkErr(err)
+
+	return &proto.Response{Success: true}, nil
+}
+
+func (s *server) DeleteCategory(ctx context.Context, request *proto.CategoryId) (*proto.Response, error) {
+	categoryUuid := request.GetCategoryUuid()
+
+	err := deleteEntity("categories", categoryUuid)
+
+	checkErr(err)
+
+	return &proto.Response{Success: true}, nil
+}
+
+func deleteEntity(entity string, entityUuid int64) error {
+	currentTimestamp := time.Now().Format("2006-01-02 15:04:05")
+	deleteQuery := fmt.Sprintf("UPDATE %s ", entity)
+	deleteQuery = deleteQuery + "SET updated_at = ?, deleted_at = ? WHERE uuid = ?"
+
+	_, err := db.Exec(deleteQuery, currentTimestamp, currentTimestamp, entityUuid)
+
+	return err
+}
+
+func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRequest) (*proto.Response, error) {
+	authorUuid, name, currentTimestamp := request.GetAuthorUuid(), request.GetAuthorName(), time.Now().Format("2006-01-02 15:04:05")
+	updateQuery := `UPDATE authors SET name = ?, updated_at = ? WHERE uuid = ?`
+
+	_, err := db.Exec(updateQuery, name, currentTimestamp, authorUuid)
+	checkErr(err)
+
+	return &proto.Response{Success: true}, nil
+}
+
+func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCategoryRequest) (*proto.Response, error) {
+	categoryId, name, parentUuid, currentTimestamp := request.GetCategoryUuid(), request.GetCategoryName(), request.GetParentUuid(), time.Now().Format("2006-01-02 15:04:05")
+	updateQuery := `UPDATE categories SET name = ?, parent_uuid = ?, updated_at = ? WHERE uuid = ?`
+
+	_, err := db.Exec(updateQuery, name, parentUuid, currentTimestamp, categoryId)
+	checkErr(err)
+
+	return &proto.Response{Success: true}, nil
 }
 
 func checkErr(err error) {
