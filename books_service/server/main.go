@@ -3,7 +3,6 @@ package main
 import (
 	proto "../proto"
 	"context"
-	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -38,7 +37,8 @@ type BooksCategories struct {
 }
 
 type Category struct {
-	Name string `json:"name"`
+	Name        string `json:"name"`
+	Parent_uuid int    `json:"parent_uuid"`
 }
 
 func main() {
@@ -139,7 +139,9 @@ func (s *server) ShowBook(ctx context.Context, request *proto.BookId) (*proto.Bo
 func getCategories(bookUuid int64) string {
 	booksCategories := []BooksCategories{}
 
-	selectBooksCategoriesQuery := `SELECT category_uuid, categories.name "categories.name" FROM books_categories
+	selectBooksCategoriesQuery := `SELECT category_uuid, categories.name "categories.name",
+       categories.parent_uuid "categories.parent_uuid"
+    FROM books_categories
     INNER JOIN categories ON categories.uuid = books_categories.category_uuid
     WHERE book_uuid = ?`
 	err = db.Select(&booksCategories, selectBooksCategoriesQuery, bookUuid)
@@ -176,81 +178,45 @@ func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest)
 
 func (s *server) ShowAuthor(ctx context.Context, request *proto.AuthorId) (*proto.AuthorData, error) {
 	authorUuid := request.GetAuthorUuid()
+	author := Author{}
 
-	selectQuery := `SELECT uuid, name, deleted_at FROM authors WHERE authors.uuid = ?`
+	selectQuery := `SELECT name FROM authors WHERE deleted_at IS NULL AND uuid = ?`
 
-	row, err := db.Query(selectQuery, authorUuid)
+	err := db.Get(&author, selectQuery, authorUuid)
 	checkErr(err)
-	var (
-		uuid      int
-		name      string
-		deletedAt sql.NullString
-		result    string
-	)
 
-	for row.Next() {
-		err := row.Scan(&uuid, &name, &deletedAt)
-		checkErr(err)
-		if deletedAt.Valid {
-			result = fmt.Sprintf("This author was deleted at %s", deletedAt.String)
-		} else {
-			result = fmt.Sprintf("Author id: %d, name: %s", uuid, name)
-		}
-	}
-
-	return &proto.AuthorData{Result: result}, nil
+	return &proto.AuthorData{Result: fmt.Sprintf("Author name: %s", author.Name)}, nil
 }
 
 func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*proto.CategoryData, error) {
 	categoryUuid := request.GetCategoryUuid()
+	category := Category{}
 
-	selectQuery := `SELECT uuid, name, deleted_at, parent_uuid FROM categories WHERE categories.uuid = ?`
+	selectQuery := `SELECT name, parent_uuid FROM categories WHERE deleted_at IS NULL AND categories.uuid = ?`
 
-	row, err := db.Query(selectQuery, categoryUuid)
+	err := db.Get(&category, selectQuery, categoryUuid)
 	checkErr(err)
-	var (
-		uuid       int
-		name       string
-		deletedAt  sql.NullString
-		parentUuid sql.NullString
-		result     string
-	)
 
-	for row.Next() {
-		err := row.Scan(&uuid, &name, &deletedAt, &parentUuid)
-		checkErr(err)
-		parent := "no parent"
-		if parentUuid.Valid && parentUuid.String != "0" {
-			parent = parentUuid.String
-		}
-		if deletedAt.Valid {
-			result = fmt.Sprintf("This category was deleted at %s", deletedAt.String)
-		} else {
-			result = fmt.Sprintf("Category id: %d, name: %s, parent: %s", uuid, name, parent)
-		}
-	}
-
-	return &proto.CategoryData{Result: result}, nil
+	return &proto.CategoryData{Result: fmt.Sprintf("Category name: %s, parent: %d", category.Name, category.Parent_uuid)}, nil
 }
 
 func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*proto.BookData, error) {
 	authorUuid := request.GetAuthorUuid()
+	books := []Book{}
 
-	selectQuery := `SELECT books.uuid, books.name FROM books WHERE books.deleted_at IS NULL AND books.author_id = ?`
+	selectQuery := `SELECT books.uuid, books.name, authors.name "authors.name"
+    FROM books
+    INNER JOIN authors ON authors.uuid = books.author_id
+    WHERE books.deleted_at IS NULL AND books.author_id = ?`
 
-	row, err := db.Query(selectQuery, authorUuid)
+	err := db.Select(&books, selectQuery, authorUuid)
 	checkErr(err)
-	var (
-		uuid   int
-		name   string
-		result string
-	)
 
-	for row.Next() {
-		err := row.Scan(&uuid, &name)
-		checkErr(err)
-		categories := getCategories(int64(uuid))
-		result = result + fmt.Sprintf("Book uuid: %d, book name: %s, categories: %s", uuid, name, categories)
+	result := ""
+
+	for _, item := range books {
+		categories := getCategories(int64(item.Uuid))
+		result = result + fmt.Sprintf("Book name: %s, author name: %s, categories: %s", item.Name, item.Author.Name, categories)
 	}
 
 	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
@@ -258,25 +224,21 @@ func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*
 
 func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId) (*proto.BookData, error) {
 	categoryUuid := request.GetCategoryUuid()
+	books := []Book{}
 
-	selectQuery := `SELECT books.uuid, books.name FROM books
-    INNER JOIN books_categories on books_categories.book_uuid = books.uuid
-    INNER JOIN categories ON categories.uuid = books_categories.category_uuid
-    WHERE books.deleted_at IS NULL AND categories.uuid = ?`
+	selectQuery := `SELECT books.uuid, books.name, authors.name "authors.name" FROM books
+    INNER JOIN authors ON authors.uuid = books.author_id
+    INNER JOIN books_categories ON books_categories.book_uuid = books.uuid
+    WHERE books.deleted_at IS NULL AND books_categories.category_uuid = ?`
 
-	row, err := db.Query(selectQuery, categoryUuid)
+	err := db.Select(&books, selectQuery, categoryUuid)
 	checkErr(err)
-	var (
-		uuid   int
-		name   string
-		result string
-	)
 
-	for row.Next() {
-		err := row.Scan(&uuid, &name)
-		checkErr(err)
-		categories := getCategories(int64(uuid))
-		result = result + fmt.Sprintf("Book uuid: %d, book name: %s, categories: %s", uuid, name, categories)
+	result := ""
+
+	for _, item := range books {
+		categories := getCategories(int64(item.Uuid))
+		result = result + fmt.Sprintf("Book name: %s, author name: %s, categories: %s", item.Name, item.Author.Name, categories)
 	}
 
 	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
