@@ -1,0 +1,18 @@
+syntax = "proto3";
+option go_package = "./";
+
+package proto;
+
+message CreateOrderRequest {
+  int64 book_uuid = 1;
+}
+
+message OrderedBookData {
+  string book_name = 1;
+  string author_name = 2;
+  string categories = 3;
+}
+
+service OrdersService {
+  rpc CreateOrder(CreateOrderRequest) returns (OrderedBookData);
+}
