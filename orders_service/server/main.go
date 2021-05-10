@@ -1,16 +1,56 @@
 package main
 
 import (
+	proto "../proto"
+	"context"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"log"
+	"net"
 )
 
 var db, err = sqlx.Connect("mysql", "root:@tcp(127.0.0.1:3306)/go_orders")
 
+type server struct {
+	proto.UnimplementedOrdersServiceServer
+}
+
+type Order struct {
+	Book_id     int    `json:"book_id"`
+	Description string `json:"description"`
+}
+
 func main() {
 	handleDatabase()
 	checkErr(err)
+
+	listener, err := net.Listen("tcp", ":9877")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	srv := grpc.NewServer()
+	proto.RegisterOrdersServiceServer(srv, &server{})
+	reflection.Register(srv)
+
+	defer db.Close()
+	if e := srv.Serve(listener); e != nil {
+		checkErr(err)
+	}
+}
+
+func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequest) (*proto.OrderedBookData, error) {
+	bookUuid, description := request.GetBookUuid(), request.GetDescription()
+
+	insertQuery := `INSERT INTO orders(book_uuid, description) VALUES(?,?)`
+
+	_, err := db.Exec(insertQuery, bookUuid, description)
+
+	checkErr(err)
+
+	return &proto.OrderedBookData{Result: "Test"}, nil
 
 }
 

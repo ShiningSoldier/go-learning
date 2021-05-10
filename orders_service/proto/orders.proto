@@ -5,12 +5,11 @@ package proto;
 
 message CreateOrderRequest {
   int64 book_uuid = 1;
+  string description = 2;
 }
 
 message OrderedBookData {
-  string book_name = 1;
-  string author_name = 2;
-  string categories = 3;
+  string result = 1;
 }
 
 service OrdersService {

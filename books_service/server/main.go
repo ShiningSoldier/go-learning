@@ -56,7 +56,7 @@ func main() {
 
 	defer db.Close()
 	if e := srv.Serve(listener); e != nil {
-		checkErr(err)
+		log.Fatal(e)
 	}
 }
 
@@ -127,7 +127,9 @@ func (s *server) ShowBook(ctx context.Context, request *proto.BookId) (*proto.Bo
     WHERE books.deleted_at IS NULL AND books.uuid = ?`
 
 	err := db.Get(&book, selectBookQuery, bookUuid)
-	checkErr(err)
+	if err != nil {
+		return &proto.BookData{Result: err.Error()}, nil
+	}
 
 	categories := getCategories(bookUuid)
 
@@ -183,7 +185,9 @@ func (s *server) ShowAuthor(ctx context.Context, request *proto.AuthorId) (*prot
 	selectQuery := `SELECT name FROM authors WHERE deleted_at IS NULL AND uuid = ?`
 
 	err := db.Get(&author, selectQuery, authorUuid)
-	checkErr(err)
+	if err != nil {
+		return &proto.AuthorData{Result: err.Error()}, nil
+	}
 
 	return &proto.AuthorData{Result: fmt.Sprintf("Author name: %s", author.Name)}, nil
 }
@@ -195,7 +199,9 @@ func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*
 	selectQuery := `SELECT name, parent_uuid FROM categories WHERE deleted_at IS NULL AND categories.uuid = ?`
 
 	err := db.Get(&category, selectQuery, categoryUuid)
-	checkErr(err)
+	if err != nil {
+		return &proto.CategoryData{Result: err.Error()}, nil
+	}
 
 	return &proto.CategoryData{Result: fmt.Sprintf("Category name: %s, parent: %d", category.Name, category.Parent_uuid)}, nil
 }
@@ -210,7 +216,9 @@ func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*
     WHERE books.deleted_at IS NULL AND books.author_id = ?`
 
 	err := db.Select(&books, selectQuery, authorUuid)
-	checkErr(err)
+	if err != nil {
+		return &proto.BookData{Result: err.Error()}, nil
+	}
 
 	result := ""
 
@@ -232,7 +240,9 @@ func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId
     WHERE books.deleted_at IS NULL AND books_categories.category_uuid = ?`
 
 	err := db.Select(&books, selectQuery, categoryUuid)
-	checkErr(err)
+	if err != nil {
+		return &proto.BookData{Result: err.Error()}, nil
+	}
 
 	result := ""
 
@@ -251,7 +261,10 @@ func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*prot
 	selectQuery := fmt.Sprintf("SELECT books.uuid, books.name, authors.name FROM books INNER JOIN authors ON authors.uuid = books.author_id WHERE books.deleted_at IS NULL LIMIT 10 OFFSET %d", offset)
 
 	row, err := db.Query(selectQuery)
-	checkErr(err)
+	if err != nil {
+		return &proto.BookData{Result: err.Error()}, nil
+	}
+
 	var (
 		uuid       int
 		name       string
@@ -274,7 +287,9 @@ func (s *server) DeleteAuthor(ctx context.Context, request *proto.AuthorId) (*pr
 
 	err := deleteEntity("authors", authorUuid)
 
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, nil
+	}
 
 	return &proto.Response{Success: true}, nil
 }
@@ -284,7 +299,9 @@ func (s *server) DeleteCategory(ctx context.Context, request *proto.CategoryId) 
 
 	err := deleteEntity("categories", categoryUuid)
 
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, nil
+	}
 
 	return &proto.Response{Success: true}, nil
 }
@@ -317,12 +334,6 @@ func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCatego
 	checkErr(err)
 
 	return &proto.Response{Success: true}, nil
-}
-
-func checkErr(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func handleDatabase() {
@@ -367,4 +378,10 @@ func handleDatabase() {
     )`
 
 	db.MustExec(booksCategoriesQuery)
+}
+
+func checkErr(err error) {
+	if err != nil {
+		log.Printf(err.Error())
+	}
 }
