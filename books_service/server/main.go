@@ -43,7 +43,9 @@ type Category struct {
 
 func main() {
 	handleDatabase()
-	checkErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	listener, err := net.Listen("tcp", ":9876")
 	if err != nil {
@@ -66,12 +68,18 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 	insertQuery := `INSERT INTO books(name, author_id) VALUES(?,?)`
 
 	row, err := db.Exec(insertQuery, name, author)
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
 	lastInsertedId, err := row.LastInsertId()
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
 
 	err = addCategories(lastInsertedId, categoriesSlice)
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
 
 	return &proto.Response{Success: true}, nil
 }
@@ -82,10 +90,14 @@ func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookReques
 	updateQuery := `UPDATE books SET name = ?, author_id = ?, updated_at = ? WHERE uuid = ?`
 
 	_, err := db.Exec(updateQuery, name, author, currentTimestamp, bookUuid)
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
 
 	err = addCategories(bookUuid, categoriesSlice)
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
 
 	return &proto.Response{Success: true}, nil
 }
@@ -111,7 +123,9 @@ func (s *server) DeleteBook(ctx context.Context, request *proto.BookId) (*proto.
 
 	err := deleteEntity("books", bookUuid)
 
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
 
 	return &proto.Response{Success: true}, nil
 }
@@ -128,7 +142,7 @@ func (s *server) ShowBook(ctx context.Context, request *proto.BookId) (*proto.Bo
 
 	err := db.Get(&book, selectBookQuery, bookUuid)
 	if err != nil {
-		return &proto.BookData{Result: err.Error()}, nil
+		return &proto.BookData{Result: ""}, err
 	}
 
 	categories := getCategories(bookUuid)
@@ -163,7 +177,9 @@ func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequ
 	insertQuery := `INSERT INTO categories(name, parent_uuid) VALUES(?,?)`
 
 	_, err := db.Exec(insertQuery, name, parentId)
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
 
 	return &proto.Response{Success: true}, nil
 }
@@ -173,7 +189,9 @@ func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest)
 	insertQuery := `INSERT INTO authors(name) VALUES(?)`
 
 	_, err := db.Exec(insertQuery, name)
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
 
 	return &proto.Response{Success: true}, nil
 }
@@ -186,7 +204,7 @@ func (s *server) ShowAuthor(ctx context.Context, request *proto.AuthorId) (*prot
 
 	err := db.Get(&author, selectQuery, authorUuid)
 	if err != nil {
-		return &proto.AuthorData{Result: err.Error()}, nil
+		return &proto.AuthorData{Result: ""}, err
 	}
 
 	return &proto.AuthorData{Result: fmt.Sprintf("Author name: %s", author.Name)}, nil
@@ -200,7 +218,7 @@ func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*
 
 	err := db.Get(&category, selectQuery, categoryUuid)
 	if err != nil {
-		return &proto.CategoryData{Result: err.Error()}, nil
+		return &proto.CategoryData{Result: ""}, err
 	}
 
 	return &proto.CategoryData{Result: fmt.Sprintf("Category name: %s, parent: %d", category.Name, category.Parent_uuid)}, nil
@@ -217,7 +235,7 @@ func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*
 
 	err := db.Select(&books, selectQuery, authorUuid)
 	if err != nil {
-		return &proto.BookData{Result: err.Error()}, nil
+		return &proto.BookData{Result: ""}, err
 	}
 
 	result := ""
@@ -241,7 +259,7 @@ func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId
 
 	err := db.Select(&books, selectQuery, categoryUuid)
 	if err != nil {
-		return &proto.BookData{Result: err.Error()}, nil
+		return &proto.BookData{Result: ""}, err
 	}
 
 	result := ""
@@ -262,7 +280,7 @@ func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*prot
 
 	row, err := db.Query(selectQuery)
 	if err != nil {
-		return &proto.BookData{Result: err.Error()}, nil
+		return &proto.BookData{Result: ""}, err
 	}
 
 	var (
@@ -288,7 +306,7 @@ func (s *server) DeleteAuthor(ctx context.Context, request *proto.AuthorId) (*pr
 	err := deleteEntity("authors", authorUuid)
 
 	if err != nil {
-		return &proto.Response{Success: false}, nil
+		return &proto.Response{Success: false}, err
 	}
 
 	return &proto.Response{Success: true}, nil
@@ -300,7 +318,7 @@ func (s *server) DeleteCategory(ctx context.Context, request *proto.CategoryId) 
 	err := deleteEntity("categories", categoryUuid)
 
 	if err != nil {
-		return &proto.Response{Success: false}, nil
+		return &proto.Response{Success: false}, err
 	}
 
 	return &proto.Response{Success: true}, nil
@@ -321,7 +339,9 @@ func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRe
 	updateQuery := `UPDATE authors SET name = ?, updated_at = ? WHERE uuid = ?`
 
 	_, err := db.Exec(updateQuery, name, currentTimestamp, authorUuid)
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
 
 	return &proto.Response{Success: true}, nil
 }
@@ -331,7 +351,9 @@ func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCatego
 	updateQuery := `UPDATE categories SET name = ?, parent_uuid = ?, updated_at = ? WHERE uuid = ?`
 
 	_, err := db.Exec(updateQuery, name, parentUuid, currentTimestamp, categoryId)
-	checkErr(err)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
 
 	return &proto.Response{Success: true}, nil
 }
