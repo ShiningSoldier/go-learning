@@ -132,6 +132,17 @@ func (s *server) DeleteBook(ctx context.Context, request *proto.BookId) (*proto.
 
 func (s *server) ShowBook(ctx context.Context, request *proto.BookId) (*proto.BookData, error) {
 	bookUuid := request.GetBookUuid()
+
+	result, err := getBookData(bookUuid)
+
+	if err != nil {
+		return &proto.BookData{Result: ""}, err
+	}
+
+	return &proto.BookData{Result: result}, nil
+}
+
+func getBookData(bookUuid int64) (string, error) {
 	book := Book{}
 
 	selectBookQuery := `SELECT books.uuid, books.name,
@@ -142,14 +153,13 @@ func (s *server) ShowBook(ctx context.Context, request *proto.BookId) (*proto.Bo
 
 	err := db.Get(&book, selectBookQuery, bookUuid)
 	if err != nil {
-		return &proto.BookData{Result: ""}, err
+		return "", err
 	}
 
 	categories := getCategories(bookUuid)
-
 	result := fmt.Sprintf("Book name: %s, author name: %s, categories: %s", book.Name, book.Author.Name, strings.TrimSpace(categories))
 
-	return &proto.BookData{Result: result}, nil
+	return result, nil
 }
 
 func getCategories(bookUuid int64) string {
@@ -356,6 +366,18 @@ func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCatego
 	}
 
 	return &proto.Response{Success: true}, nil
+}
+
+func (s *server) GetBookData(ctx context.Context, request *proto.BookId) (*proto.BookData, error) {
+	bookUuid := request.GetBookUuid()
+
+	result, err := getBookData(bookUuid)
+
+	if err != nil {
+		return &proto.BookData{Result: ""}, err
+	}
+
+	return &proto.BookData{Result: result}, nil
 }
 
 func handleDatabase() {

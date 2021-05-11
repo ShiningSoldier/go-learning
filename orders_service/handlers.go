@@ -1,7 +1,7 @@
 package main
 
 import (
-	proto "../proto"
+	proto "./proto"
 	"context"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -42,6 +42,15 @@ func main() {
 		log.Fatal(e)
 	}
 }
+
+// CreateOrder godoc
+// @Summary Create a new order
+// @Description Create an order by book ID. Also the description can be provided
+// @ID create-order
+// @Accept json
+// @Produce json
+// @Param book_uuid body int64 true
+// @Param description body string false
 
 func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequest) (*proto.OrderedBookData, error) {
 	bookUuid, description := request.GetBookUuid(), request.GetDescription()

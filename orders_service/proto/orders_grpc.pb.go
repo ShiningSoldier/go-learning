@@ -99,3 +99,89 @@ var OrdersService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/orders.proto",
 }
+
+// BooksServiceClient is the client API for BooksService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type BooksServiceClient interface {
+	GetBookData(ctx context.Context, in *BookUuid, opts ...grpc.CallOption) (*OrderedBookData, error)
+}
+
+type booksServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewBooksServiceClient(cc grpc.ClientConnInterface) BooksServiceClient {
+	return &booksServiceClient{cc}
+}
+
+func (c *booksServiceClient) GetBookData(ctx context.Context, in *BookUuid, opts ...grpc.CallOption) (*OrderedBookData, error) {
+	out := new(OrderedBookData)
+	err := c.cc.Invoke(ctx, "/proto.BooksService/GetBookData", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// BooksServiceServer is the server API for BooksService service.
+// All implementations must embed UnimplementedBooksServiceServer
+// for forward compatibility
+type BooksServiceServer interface {
+	GetBookData(context.Context, *BookUuid) (*OrderedBookData, error)
+	mustEmbedUnimplementedBooksServiceServer()
+}
+
+// UnimplementedBooksServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedBooksServiceServer struct {
+}
+
+func (UnimplementedBooksServiceServer) GetBookData(context.Context, *BookUuid) (*OrderedBookData, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBookData not implemented")
+}
+func (UnimplementedBooksServiceServer) mustEmbedUnimplementedBooksServiceServer() {}
+
+// UnsafeBooksServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to BooksServiceServer will
+// result in compilation errors.
+type UnsafeBooksServiceServer interface {
+	mustEmbedUnimplementedBooksServiceServer()
+}
+
+func RegisterBooksServiceServer(s grpc.ServiceRegistrar, srv BooksServiceServer) {
+	s.RegisterService(&BooksService_ServiceDesc, srv)
+}
+
+func _BooksService_GetBookData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BookUuid)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BooksServiceServer).GetBookData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BooksService/GetBookData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BooksServiceServer).GetBookData(ctx, req.(*BookUuid))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// BooksService_ServiceDesc is the grpc.ServiceDesc for BooksService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var BooksService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.BooksService",
+	HandlerType: (*BooksServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetBookData",
+			Handler:    _BooksService_GetBookData_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "proto/orders.proto",
+}

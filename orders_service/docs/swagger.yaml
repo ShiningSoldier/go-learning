@@ -1,0 +1,9 @@
+basePath: /
+host: localhost:8081
+info:
+  contact: {}
+  description: Allows to create orders
+  title: Orders service api
+  version: "1.0"
+paths: {}
+swagger: "2.0"

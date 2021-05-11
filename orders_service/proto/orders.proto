@@ -12,6 +12,14 @@ message OrderedBookData {
   string result = 1;
 }
 
+message BookUuid {
+  int64 book_uuid = 1;
+}
+
 service OrdersService {
   rpc CreateOrder(CreateOrderRequest) returns (OrderedBookData);
+}
+
+service BooksService {
+  rpc GetBookData(BookUuid) returns (OrderedBookData);
 }
