@@ -24,7 +24,9 @@ type Order struct {
 
 func main() {
 	handleDatabase()
-	checkErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	listener, err := net.Listen("tcp", ":9877")
 	if err != nil {
@@ -37,7 +39,7 @@ func main() {
 
 	defer db.Close()
 	if e := srv.Serve(listener); e != nil {
-		checkErr(err)
+		log.Fatal(e)
 	}
 }
 
@@ -48,7 +50,9 @@ func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequ
 
 	_, err := db.Exec(insertQuery, bookUuid, description)
 
-	checkErr(err)
+	if err != nil {
+		return &proto.OrderedBookData{Result: ""}, err
+	}
 
 	return &proto.OrderedBookData{Result: "Test"}, nil
 
@@ -65,10 +69,4 @@ func handleDatabase() {
     );`
 
 	db.MustExec(ordersQuery)
-}
-
-func checkErr(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
 }
