@@ -52,7 +52,7 @@ func main() {
 // @Param book_uuid body int64 true
 // @Param description body string false
 
-func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequest) (*proto.OrderedBookData, error) {
+func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequest) (*proto.BookData, error) {
 	bookUuid, description := request.GetBookUuid(), request.GetDescription()
 
 	insertQuery := `INSERT INTO orders(book_uuid, description) VALUES(?,?)`
@@ -60,10 +60,10 @@ func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequ
 	_, err := db.Exec(insertQuery, bookUuid, description)
 
 	if err != nil {
-		return &proto.OrderedBookData{Result: ""}, err
+		return &proto.BookData{Result: ""}, err
 	}
 
-	return &proto.OrderedBookData{Result: "Test"}, nil
+	return &proto.BookData{Result: "Test"}, nil
 
 }
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	proto "../proto"
+	proto "./proto"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"

@@ -8,18 +8,18 @@ message CreateOrderRequest {
   string description = 2;
 }
 
-message OrderedBookData {
+message BookData {
   string result = 1;
 }
 
-message BookUuid {
+message BookId {
   int64 book_uuid = 1;
 }
 
 service OrdersService {
-  rpc CreateOrder(CreateOrderRequest) returns (OrderedBookData);
+  rpc CreateOrder(CreateOrderRequest) returns (BookData);
 }
 
 service BooksService {
-  rpc GetBookData(BookUuid) returns (OrderedBookData);
+  rpc ShowBook(BookId) returns (BookData);
 }

@@ -18,7 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrdersServiceClient interface {
-	CreateOrder(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*OrderedBookData, error)
+	CreateOrder(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*BookData, error)
 }
 
 type ordersServiceClient struct {
@@ -29,8 +29,8 @@ func NewOrdersServiceClient(cc grpc.ClientConnInterface) OrdersServiceClient {
 	return &ordersServiceClient{cc}
 }
 
-func (c *ordersServiceClient) CreateOrder(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*OrderedBookData, error) {
-	out := new(OrderedBookData)
+func (c *ordersServiceClient) CreateOrder(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*BookData, error) {
+	out := new(BookData)
 	err := c.cc.Invoke(ctx, "/proto.OrdersService/CreateOrder", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (c *ordersServiceClient) CreateOrder(ctx context.Context, in *CreateOrderRe
 // All implementations must embed UnimplementedOrdersServiceServer
 // for forward compatibility
 type OrdersServiceServer interface {
-	CreateOrder(context.Context, *CreateOrderRequest) (*OrderedBookData, error)
+	CreateOrder(context.Context, *CreateOrderRequest) (*BookData, error)
 	mustEmbedUnimplementedOrdersServiceServer()
 }
 
@@ -50,7 +50,7 @@ type OrdersServiceServer interface {
 type UnimplementedOrdersServiceServer struct {
 }
 
-func (UnimplementedOrdersServiceServer) CreateOrder(context.Context, *CreateOrderRequest) (*OrderedBookData, error) {
+func (UnimplementedOrdersServiceServer) CreateOrder(context.Context, *CreateOrderRequest) (*BookData, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateOrder not implemented")
 }
 func (UnimplementedOrdersServiceServer) mustEmbedUnimplementedOrdersServiceServer() {}
@@ -104,7 +104,7 @@ var OrdersService_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BooksServiceClient interface {
-	GetBookData(ctx context.Context, in *BookUuid, opts ...grpc.CallOption) (*OrderedBookData, error)
+	ShowBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*BookData, error)
 }
 
 type booksServiceClient struct {
@@ -115,9 +115,9 @@ func NewBooksServiceClient(cc grpc.ClientConnInterface) BooksServiceClient {
 	return &booksServiceClient{cc}
 }
 
-func (c *booksServiceClient) GetBookData(ctx context.Context, in *BookUuid, opts ...grpc.CallOption) (*OrderedBookData, error) {
-	out := new(OrderedBookData)
-	err := c.cc.Invoke(ctx, "/proto.BooksService/GetBookData", in, out, opts...)
+func (c *booksServiceClient) ShowBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*BookData, error) {
+	out := new(BookData)
+	err := c.cc.Invoke(ctx, "/proto.BooksService/ShowBook", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (c *booksServiceClient) GetBookData(ctx context.Context, in *BookUuid, opts
 // All implementations must embed UnimplementedBooksServiceServer
 // for forward compatibility
 type BooksServiceServer interface {
-	GetBookData(context.Context, *BookUuid) (*OrderedBookData, error)
+	ShowBook(context.Context, *BookId) (*BookData, error)
 	mustEmbedUnimplementedBooksServiceServer()
 }
 
@@ -136,8 +136,8 @@ type BooksServiceServer interface {
 type UnimplementedBooksServiceServer struct {
 }
 
-func (UnimplementedBooksServiceServer) GetBookData(context.Context, *BookUuid) (*OrderedBookData, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBookData not implemented")
+func (UnimplementedBooksServiceServer) ShowBook(context.Context, *BookId) (*BookData, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShowBook not implemented")
 }
 func (UnimplementedBooksServiceServer) mustEmbedUnimplementedBooksServiceServer() {}
 
@@ -152,20 +152,20 @@ func RegisterBooksServiceServer(s grpc.ServiceRegistrar, srv BooksServiceServer)
 	s.RegisterService(&BooksService_ServiceDesc, srv)
 }
 
-func _BooksService_GetBookData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BookUuid)
+func _BooksService_ShowBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BookId)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BooksServiceServer).GetBookData(ctx, in)
+		return srv.(BooksServiceServer).ShowBook(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.BooksService/GetBookData",
+		FullMethod: "/proto.BooksService/ShowBook",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BooksServiceServer).GetBookData(ctx, req.(*BookUuid))
+		return srv.(BooksServiceServer).ShowBook(ctx, req.(*BookId))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -178,8 +178,8 @@ var BooksService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*BooksServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetBookData",
-			Handler:    _BooksService_GetBookData_Handler,
+			MethodName: "ShowBook",
+			Handler:    _BooksService_ShowBook_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

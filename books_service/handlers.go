@@ -1,7 +1,7 @@
 package main
 
 import (
-	proto "../proto"
+	proto "./proto"
 	"context"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"

@@ -46,8 +46,8 @@ func main() {
 		_, err = client.CreateOrder(ctx, req)
 
 		if err == nil {
-			bookReq := &proto.BookUuid{BookUuid: int64(bookUuid)}
-			bookResponse, err := client2.GetBookData(ctx, bookReq)
+			bookReq := &proto.BookId{BookUuid: int64(bookUuid)}
+			bookResponse, err := client2.ShowBook(ctx, bookReq)
 			if err == nil {
 				ctx.JSON(http.StatusOK, gin.H{
 					"result": fmt.Sprint(bookResponse.Result),
