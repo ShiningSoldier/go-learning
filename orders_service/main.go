@@ -86,5 +86,8 @@ func main() {
 
 	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	g.Run(":8081")
+	err = g.Run(":8081")
+	if err != nil {
+		log.Fatal(err)
+	}
 }

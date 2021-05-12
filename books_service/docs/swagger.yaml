@@ -1,0 +1,354 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: Allows to handle books
+  title: Books service api
+  version: "1.0"
+paths:
+  /add:
+    post:
+      consumes:
+      - application/json
+      description: create a book using the POST request
+      operationId: add-book
+      parameters:
+      - description: Book name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: List of category iIDs
+        in: path
+        name: category_uuid
+        required: true
+        type: string
+      - description: Book author ID
+        in: path
+        name: author_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: Creates a new book
+  /add-author:
+    post:
+      consumes:
+      - application/json
+      description: creates a new author
+      operationId: create-author
+      parameters:
+      - description: Author name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: Create an author
+  /add-category:
+    post:
+      consumes:
+      - application/json
+      description: creates a new category
+      operationId: create-category
+      parameters:
+      - description: Category name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Parent id
+        in: path
+        name: parent_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: Create a category
+  /delete-author/{author_uuid}:
+    delete:
+      consumes:
+      - application/json
+      description: delete an author using the DELETE request
+      operationId: delete-author
+      parameters:
+      - description: Author uuid
+        in: path
+        name: author_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: Deletes an author
+  /delete-category/{delete_category}:
+    delete:
+      consumes:
+      - application/json
+      description: delete a category using the DELETE request
+      operationId: delete-category
+      parameters:
+      - description: Category uuid
+        in: path
+        name: category_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: Deletes a category
+  /delete/{book_uuid}:
+    delete:
+      consumes:
+      - application/json
+      description: delete a book using the DELETE request
+      operationId: delete-book
+      parameters:
+      - description: Book uuid
+        in: path
+        name: book_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: Deletes a book
+  /filter-by-author/{author_uuid}:
+    get:
+      consumes:
+      - application/json
+      description: shows the basic data of books by author
+      operationId: filter-by-author
+      parameters:
+      - description: Author uuid
+        in: path
+        name: author_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Shows all books by specified author
+  /filter-by-author/{category_uuid}:
+    get:
+      consumes:
+      - application/json
+      description: shows the basic data of books by category
+      operationId: filter-by-category
+      parameters:
+      - description: Category uuid
+        in: path
+        name: category_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Shows all books by specified category
+  /paginate/{page_number}:
+    get:
+      consumes:
+      - application/json
+      description: shows the books by pages
+      operationId: paginate
+      parameters:
+      - description: Page number
+        in: path
+        name: page_number
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Paginate books
+  /show-author/{author_uuid}:
+    get:
+      consumes:
+      - application/json
+      description: show the basic author data
+      operationId: show-author
+      parameters:
+      - description: Author uuid
+        in: path
+        name: author_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Show author data
+  /show-category/{category_uuid}:
+    get:
+      consumes:
+      - application/json
+      description: show the basic category data
+      operationId: show-category
+      parameters:
+      - description: Category uuid
+        in: path
+        name: category_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Show category data
+  /show/{book_uuid}:
+    get:
+      consumes:
+      - application/json
+      description: shows the main data about a book
+      operationId: show-book
+      parameters:
+      - description: Book uuid
+        in: path
+        name: book_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: Shows a book
+  /update:
+    put:
+      consumes:
+      - application/json
+      description: update a book using the PUT request
+      operationId: update-book
+      parameters:
+      - description: Book uuid
+        in: path
+        name: book_uuid
+        required: true
+        type: integer
+      - description: Book name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: List of category iIDs
+        in: path
+        name: category_uuid
+        required: true
+        type: string
+      - description: Book author ID
+        in: path
+        name: author_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: Updates a book
+  /update-author:
+    put:
+      consumes:
+      - application/json
+      description: update an author using the PUT request
+      operationId: update-author
+      parameters:
+      - description: Author uuid
+        in: path
+        name: author_uuid
+        required: true
+        type: integer
+      - description: Author name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: Updates an author
+  /update-category:
+    put:
+      consumes:
+      - application/json
+      description: update a category using the PUT request
+      operationId: update-category
+      parameters:
+      - description: Category uuid
+        in: path
+        name: category_uuid
+        required: true
+        type: integer
+      - description: Category name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Parent id
+        in: path
+        name: parent_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: Updates a category
+swagger: "2.0"

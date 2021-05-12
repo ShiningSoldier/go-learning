@@ -62,6 +62,17 @@ func main() {
 	}
 }
 
+// AddBook godoc
+// @Summary Creates a new book
+// @Description create a book using the POST request
+// @ID add-book
+// @Accept  json
+// @Produce  json
+// @Param name path string true "Book name"
+// @Param category_uuid path string true "List of category iIDs"
+// @Param author_uuid path int true "Book author ID"
+// @Success 200 {object} bool
+// @Router /add [post]
 func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*proto.Response, error) {
 	name, category, author := request.GetBookName(), request.GetCategoryId(), request.GetAuthorId()
 	categoriesSlice := strings.Split(category, ",")
@@ -84,6 +95,18 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 	return &proto.Response{Success: true}, nil
 }
 
+// UpdateBook godoc
+// @Summary Updates a book
+// @Description update a book using the PUT request
+// @ID update-book
+// @Accept  json
+// @Produce  json
+// @Param book_uuid path int true "Book uuid"
+// @Param name path string true "Book name"
+// @Param category_uuid path string true "List of category iIDs"
+// @Param author_uuid path int true "Book author ID"
+// @Success 200 {object} bool
+// @Router /update [put]
 func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookRequest) (*proto.Response, error) {
 	bookUuid, name, category, author, currentTimestamp := request.GetBookUuid(), request.GetBookName(), request.GetCategoryId(), request.GetAuthorId(), time.Now().Format("2006-01-02 15:04:05")
 	categoriesSlice := strings.Split(category, ",")
@@ -118,6 +141,15 @@ func addCategories(bookUuid int64, categoriesSlice []string) error {
 	return err
 }
 
+// DeleteBook godoc
+// @Summary Deletes a book
+// @Description delete a book using the DELETE request
+// @ID delete-book
+// @Accept  json
+// @Produce  json
+// @Param book_uuid path int true "Book uuid"
+// @Success 200 {object} bool
+// @Router /delete/{book_uuid} [delete]
 func (s *server) DeleteBook(ctx context.Context, request *proto.BookId) (*proto.Response, error) {
 	bookUuid := request.GetBookUuid()
 
@@ -130,6 +162,15 @@ func (s *server) DeleteBook(ctx context.Context, request *proto.BookId) (*proto.
 	return &proto.Response{Success: true}, nil
 }
 
+// ShowBook godoc
+// @Summary Shows a book
+// @Description shows the main data about a book
+// @ID show-book
+// @Accept  json
+// @Produce  json
+// @Param book_uuid path int true "Book uuid"
+// @Success 200 {object} bool
+// @Router /show/{book_uuid} [get]
 func (s *server) ShowBook(ctx context.Context, request *proto.BookId) (*proto.BookData, error) {
 	bookUuid := request.GetBookUuid()
 
@@ -182,6 +223,16 @@ func getCategories(bookUuid int64) string {
 	return categories
 }
 
+// AddCategory godoc
+// @Summary Create a category
+// @Description creates a new category
+// @ID create-category
+// @Accept  json
+// @Produce  json
+// @Param name path string true "Category name"
+// @Param parent_id path int true "Parent id"
+// @Success 200 {object} bool
+// @Router /add-category [post]
 func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequest) (*proto.Response, error) {
 	name, parentId := request.GetName(), request.GetParentUuid()
 	insertQuery := `INSERT INTO categories(name, parent_uuid) VALUES(?,?)`
@@ -194,6 +245,15 @@ func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequ
 	return &proto.Response{Success: true}, nil
 }
 
+// AddAuthor godoc
+// @Summary Create an author
+// @Description creates a new author
+// @ID create-author
+// @Accept  json
+// @Produce  json
+// @Param name path string true "Author name"
+// @Success 200 {object} bool
+// @Router /add-author [post]
 func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest) (*proto.Response, error) {
 	name := request.GetName()
 	insertQuery := `INSERT INTO authors(name) VALUES(?)`
@@ -206,6 +266,15 @@ func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest)
 	return &proto.Response{Success: true}, nil
 }
 
+// ShowAuthor godoc
+// @Summary Show author data
+// @Description show the basic author data
+// @ID show-author
+// @Accept  json
+// @Produce  json
+// @Param author_uuid path int true "Author uuid"
+// @Success 200 {object} string
+// @Router /show-author/{author_uuid} [get]
 func (s *server) ShowAuthor(ctx context.Context, request *proto.AuthorId) (*proto.AuthorData, error) {
 	authorUuid := request.GetAuthorUuid()
 	author := Author{}
@@ -220,6 +289,15 @@ func (s *server) ShowAuthor(ctx context.Context, request *proto.AuthorId) (*prot
 	return &proto.AuthorData{Result: fmt.Sprintf("Author name: %s", author.Name)}, nil
 }
 
+// ShowCategory godoc
+// @Summary Show category data
+// @Description show the basic category data
+// @ID show-category
+// @Accept  json
+// @Produce  json
+// @Param category_uuid path int true "Category uuid"
+// @Success 200 {object} string
+// @Router /show-category/{category_uuid} [get]
 func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*proto.CategoryData, error) {
 	categoryUuid := request.GetCategoryUuid()
 	category := Category{}
@@ -234,6 +312,15 @@ func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*
 	return &proto.CategoryData{Result: fmt.Sprintf("Category name: %s, parent: %d", category.Name, category.Parent_uuid)}, nil
 }
 
+// FilterByAuthor godoc
+// @Summary Shows all books by specified author
+// @Description shows the basic data of books by author
+// @ID filter-by-author
+// @Accept  json
+// @Produce  json
+// @Param author_uuid path int true "Author uuid"
+// @Success 200 {object} string
+// @Router /filter-by-author/{author_uuid} [get]
 func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*proto.BookData, error) {
 	authorUuid := request.GetAuthorUuid()
 	books := []Book{}
@@ -258,6 +345,15 @@ func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*
 	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
 }
 
+// FilterByCategory godoc
+// @Summary Shows all books by specified category
+// @Description shows the basic data of books by category
+// @ID filter-by-category
+// @Accept  json
+// @Produce  json
+// @Param category_uuid path int true "Category uuid"
+// @Success 200 {object} string
+// @Router /filter-by-author/{category_uuid} [get]
 func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId) (*proto.BookData, error) {
 	categoryUuid := request.GetCategoryUuid()
 	books := []Book{}
@@ -282,6 +378,15 @@ func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId
 	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
 }
 
+// Paginate godoc
+// @Summary Paginate books
+// @Description shows the books by pages
+// @ID paginate
+// @Accept  json
+// @Produce  json
+// @Param page_number path int true "Page number"
+// @Success 200 {object} string
+// @Router /paginate/{page_number} [get]
 func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*proto.BookData, error) {
 	pageNumber := request.GetPageNumber()
 	offset := (pageNumber - 1) * 10
@@ -310,6 +415,15 @@ func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*prot
 	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
 }
 
+// DeleteAuthor godoc
+// @Summary Deletes an author
+// @Description delete an author using the DELETE request
+// @ID delete-author
+// @Accept  json
+// @Produce  json
+// @Param author_uuid path int true "Author uuid"
+// @Success 200 {object} bool
+// @Router /delete-author/{author_uuid} [delete]
 func (s *server) DeleteAuthor(ctx context.Context, request *proto.AuthorId) (*proto.Response, error) {
 	authorUuid := request.GetAuthorUuid()
 
@@ -322,6 +436,15 @@ func (s *server) DeleteAuthor(ctx context.Context, request *proto.AuthorId) (*pr
 	return &proto.Response{Success: true}, nil
 }
 
+// DeleteCategory godoc
+// @Summary Deletes a category
+// @Description delete a category using the DELETE request
+// @ID delete-category
+// @Accept  json
+// @Produce  json
+// @Param category_uuid path int true "Category uuid"
+// @Success 200 {object} bool
+// @Router /delete-category/{delete_category} [delete]
 func (s *server) DeleteCategory(ctx context.Context, request *proto.CategoryId) (*proto.Response, error) {
 	categoryUuid := request.GetCategoryUuid()
 
@@ -344,6 +467,16 @@ func deleteEntity(entity string, entityUuid int64) error {
 	return err
 }
 
+// UpdateAuthor godoc
+// @Summary Updates an author
+// @Description update an author using the PUT request
+// @ID update-author
+// @Accept  json
+// @Produce  json
+// @Param author_uuid path int true "Author uuid"
+// @Param name path string true "Author name"
+// @Success 200 {object} bool
+// @Router /update-author [put]
 func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRequest) (*proto.Response, error) {
 	authorUuid, name, currentTimestamp := request.GetAuthorUuid(), request.GetAuthorName(), time.Now().Format("2006-01-02 15:04:05")
 	updateQuery := `UPDATE authors SET name = ?, updated_at = ? WHERE uuid = ?`
@@ -356,6 +489,17 @@ func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRe
 	return &proto.Response{Success: true}, nil
 }
 
+// UpdateCategory godoc
+// @Summary Updates a category
+// @Description update a category using the PUT request
+// @ID update-category
+// @Accept  json
+// @Produce  json
+// @Param category_uuid path int true "Category uuid"
+// @Param name path string true "Category name"
+// @Param parent_uuid path int true "Parent id"
+// @Success 200 {object} bool
+// @Router /update-category [put]
 func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCategoryRequest) (*proto.Response, error) {
 	categoryId, name, parentUuid, currentTimestamp := request.GetCategoryUuid(), request.GetCategoryName(), request.GetParentUuid(), time.Now().Format("2006-01-02 15:04:05")
 	updateQuery := `UPDATE categories SET name = ?, parent_uuid = ?, updated_at = ? WHERE uuid = ?`

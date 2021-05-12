@@ -27,9 +27,14 @@ message BookId {
   int64 book_uuid = 1;
 }
 
+message PageNumber {
+  int64 page_number = 1;
+}
+
 service OrdersService {
   rpc CreateOrder(CreateOrderRequest) returns (BookData);
   rpc GetOrderData(OrderId) returns (OrderData);
+  rpc Paginate(PageNumber) returns (stream OrderData);
 }
 
 service BooksService {

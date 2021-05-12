@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 type OrdersServiceClient interface {
 	CreateOrder(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*BookData, error)
 	GetOrderData(ctx context.Context, in *OrderId, opts ...grpc.CallOption) (*OrderData, error)
+	Paginate(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (OrdersService_PaginateClient, error)
 }
 
 type ordersServiceClient struct {
@@ -48,12 +49,45 @@ func (c *ordersServiceClient) GetOrderData(ctx context.Context, in *OrderId, opt
 	return out, nil
 }
 
+func (c *ordersServiceClient) Paginate(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (OrdersService_PaginateClient, error) {
+	stream, err := c.cc.NewStream(ctx, &OrdersService_ServiceDesc.Streams[0], "/proto.OrdersService/Paginate", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &ordersServicePaginateClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type OrdersService_PaginateClient interface {
+	Recv() (*OrderData, error)
+	grpc.ClientStream
+}
+
+type ordersServicePaginateClient struct {
+	grpc.ClientStream
+}
+
+func (x *ordersServicePaginateClient) Recv() (*OrderData, error) {
+	m := new(OrderData)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // OrdersServiceServer is the server API for OrdersService service.
 // All implementations must embed UnimplementedOrdersServiceServer
 // for forward compatibility
 type OrdersServiceServer interface {
 	CreateOrder(context.Context, *CreateOrderRequest) (*BookData, error)
 	GetOrderData(context.Context, *OrderId) (*OrderData, error)
+	Paginate(*PageNumber, OrdersService_PaginateServer) error
 	mustEmbedUnimplementedOrdersServiceServer()
 }
 
@@ -66,6 +100,9 @@ func (UnimplementedOrdersServiceServer) CreateOrder(context.Context, *CreateOrde
 }
 func (UnimplementedOrdersServiceServer) GetOrderData(context.Context, *OrderId) (*OrderData, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrderData not implemented")
+}
+func (UnimplementedOrdersServiceServer) Paginate(*PageNumber, OrdersService_PaginateServer) error {
+	return status.Errorf(codes.Unimplemented, "method Paginate not implemented")
 }
 func (UnimplementedOrdersServiceServer) mustEmbedUnimplementedOrdersServiceServer() {}
 
@@ -116,6 +153,27 @@ func _OrdersService_GetOrderData_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrdersService_Paginate_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(PageNumber)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(OrdersServiceServer).Paginate(m, &ordersServicePaginateServer{stream})
+}
+
+type OrdersService_PaginateServer interface {
+	Send(*OrderData) error
+	grpc.ServerStream
+}
+
+type ordersServicePaginateServer struct {
+	grpc.ServerStream
+}
+
+func (x *ordersServicePaginateServer) Send(m *OrderData) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // OrdersService_ServiceDesc is the grpc.ServiceDesc for OrdersService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -132,7 +190,13 @@ var OrdersService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OrdersService_GetOrderData_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Paginate",
+			Handler:       _OrdersService_Paginate_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "proto/orders.proto",
 }
 

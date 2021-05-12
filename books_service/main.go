@@ -1,14 +1,24 @@
 package main
 
 import (
+	_ "./docs"
 	proto "./proto"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
 	"log"
 	"net/http"
 	"strconv"
 )
+
+// @title Books service api
+// @version 1.0
+// @description Allows to handle books
+
+// @host localhost:8080
+// @BasePath /
 
 func main() {
 	conn, err := grpc.Dial("localhost:9876", grpc.WithInsecure())
@@ -280,6 +290,8 @@ func main() {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 	})
+
+	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	if err := g.Run(":8080"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)

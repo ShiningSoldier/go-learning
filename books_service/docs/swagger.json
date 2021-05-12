@@ -1,0 +1,526 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Allows to handle books",
+        "title": "Books service api",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/add": {
+            "post": {
+                "description": "create a book using the POST request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Creates a new book",
+                "operationId": "add-book",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Book name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "List of category iIDs",
+                        "name": "category_uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Book author ID",
+                        "name": "author_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/add-author": {
+            "post": {
+                "description": "creates a new author",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create an author",
+                "operationId": "create-author",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Author name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/add-category": {
+            "post": {
+                "description": "creates a new category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create a category",
+                "operationId": "create-category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Category name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Parent id",
+                        "name": "parent_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/delete-author/{author_uuid}": {
+            "delete": {
+                "description": "delete an author using the DELETE request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes an author",
+                "operationId": "delete-author",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Author uuid",
+                        "name": "author_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/delete-category/{delete_category}": {
+            "delete": {
+                "description": "delete a category using the DELETE request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes a category",
+                "operationId": "delete-category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category uuid",
+                        "name": "category_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/delete/{book_uuid}": {
+            "delete": {
+                "description": "delete a book using the DELETE request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Deletes a book",
+                "operationId": "delete-book",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book uuid",
+                        "name": "book_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/filter-by-author/{author_uuid}": {
+            "get": {
+                "description": "shows the basic data of books by author",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Shows all books by specified author",
+                "operationId": "filter-by-author",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Author uuid",
+                        "name": "author_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/filter-by-author/{category_uuid}": {
+            "get": {
+                "description": "shows the basic data of books by category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Shows all books by specified category",
+                "operationId": "filter-by-category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category uuid",
+                        "name": "category_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/paginate/{page_number}": {
+            "get": {
+                "description": "shows the books by pages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Paginate books",
+                "operationId": "paginate",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page_number",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/show-author/{author_uuid}": {
+            "get": {
+                "description": "show the basic author data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Show author data",
+                "operationId": "show-author",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Author uuid",
+                        "name": "author_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/show-category/{category_uuid}": {
+            "get": {
+                "description": "show the basic category data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Show category data",
+                "operationId": "show-category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category uuid",
+                        "name": "category_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/show/{book_uuid}": {
+            "get": {
+                "description": "shows the main data about a book",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Shows a book",
+                "operationId": "show-book",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book uuid",
+                        "name": "book_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/update": {
+            "put": {
+                "description": "update a book using the PUT request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a book",
+                "operationId": "update-book",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book uuid",
+                        "name": "book_uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Book name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "List of category iIDs",
+                        "name": "category_uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Book author ID",
+                        "name": "author_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/update-author": {
+            "put": {
+                "description": "update an author using the PUT request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates an author",
+                "operationId": "update-author",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Author uuid",
+                        "name": "author_uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Author name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/update-category": {
+            "put": {
+                "description": "update a category using the PUT request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a category",
+                "operationId": "update-category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category uuid",
+                        "name": "category_uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Category name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Parent id",
+                        "name": "parent_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
