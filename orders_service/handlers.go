@@ -18,8 +18,10 @@ type server struct {
 }
 
 type Order struct {
-	Book_id     int    `json:"book_id"`
+	Uuid        int64  `json:"uuid"`
+	Book_uuid   int64  `json:"book_uuid"`
 	Description string `json:"description"`
+	Created_at  string `json:"created_at"`
 }
 
 func main() {
@@ -64,7 +66,31 @@ func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequ
 	}
 
 	return &proto.BookData{Result: "Test"}, nil
+}
 
+func (s *server) GetOrderData(ctx context.Context, request *proto.OrderId) (*proto.OrderData, error) {
+	orderUuid := request.GetOrderUuid()
+	order := Order{}
+
+	selectQuery := `SELECT uuid, book_uuid, description, created_at FROM orders WHERE uuid = ?`
+
+	err := db.Get(&order, selectQuery, orderUuid)
+
+	if err != nil {
+		return &proto.OrderData{
+			OrderUuid:   0,
+			BookUuid:    0,
+			Description: "",
+			CreatedAt:   "",
+		}, err
+	}
+
+	return &proto.OrderData{
+		OrderUuid:   order.Uuid,
+		BookUuid:    order.Book_uuid,
+		Description: order.Description,
+		CreatedAt:   order.Created_at,
+	}, nil
 }
 
 func handleDatabase() {

@@ -60,6 +60,30 @@ func main() {
 		}
 	})
 
+	g.GET("/show/:order_uuid", func(ctx *gin.Context) {
+		orderUuid, err := strconv.ParseUint(ctx.Param("order_uuid"), 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param order_uuid"})
+		}
+
+		req := &proto.OrderId{OrderUuid: int64(orderUuid)}
+
+		if response, err := client.GetOrderData(ctx, req); err == nil {
+			result := [4]string{
+				strconv.FormatInt(response.OrderUuid, 10),
+				strconv.FormatInt(response.BookUuid, 10),
+				response.Description,
+				response.CreatedAt,
+			}
+
+			ctx.JSON(http.StatusOK, gin.H{
+				"result": result,
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+
 	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	g.Run(":8081")
