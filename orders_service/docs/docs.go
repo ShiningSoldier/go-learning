@@ -22,7 +22,79 @@ var doc = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {}
+    "paths": {
+        "/create-order": {
+            "post": {
+                "description": "allows to buy a book and return the information about it",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Created an order",
+                "operationId": "create-order",
+                "parameters": [
+                    {
+                        "description": "Book uuid",
+                        "name": "book_uuid",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Author name",
+                        "name": "description",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "/get-order-data": {
+            "get": {
+                "description": "shows the basic information about the specific order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get the specific order data",
+                "operationId": "get-order-data",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order uuid",
+                        "name": "order_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        }
+    }
 }`
 
 type swaggerInfo struct {

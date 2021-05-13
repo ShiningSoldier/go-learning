@@ -68,7 +68,7 @@ func main() {
 // @ID add-book
 // @Accept  json
 // @Produce  json
-// @Param name path string true "Book name"
+// @Param name body string true "Book name"
 // @Param category_uuid path string true "List of category iIDs"
 // @Param author_uuid path int true "Book author ID"
 // @Success 200 {object} bool
@@ -101,10 +101,10 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 // @ID update-book
 // @Accept  json
 // @Produce  json
-// @Param book_uuid path int true "Book uuid"
-// @Param name path string true "Book name"
-// @Param category_uuid path string true "List of category iIDs"
-// @Param author_uuid path int true "Book author ID"
+// @Param book_uuid body int true "Book uuid"
+// @Param name body string true "Book name"
+// @Param category_uuid body string true "List of category iIDs"
+// @Param author_uuid body int true "Book author ID"
 // @Success 200 {object} bool
 // @Router /update [put]
 func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookRequest) (*proto.Response, error) {
@@ -229,8 +229,8 @@ func getCategories(bookUuid int64) string {
 // @ID create-category
 // @Accept  json
 // @Produce  json
-// @Param name path string true "Category name"
-// @Param parent_id path int true "Parent id"
+// @Param name body string true "Category name"
+// @Param parent_id body int true "Parent id"
 // @Success 200 {object} bool
 // @Router /add-category [post]
 func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequest) (*proto.Response, error) {
@@ -251,7 +251,7 @@ func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequ
 // @ID create-author
 // @Accept  json
 // @Produce  json
-// @Param name path string true "Author name"
+// @Param name body string true "Author name"
 // @Success 200 {object} bool
 // @Router /add-author [post]
 func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest) (*proto.Response, error) {
@@ -473,8 +473,8 @@ func deleteEntity(entity string, entityUuid int64) error {
 // @ID update-author
 // @Accept  json
 // @Produce  json
-// @Param author_uuid path int true "Author uuid"
-// @Param name path string true "Author name"
+// @Param author_uuid body int true "Author uuid"
+// @Param name body string true "Author name"
 // @Success 200 {object} bool
 // @Router /update-author [put]
 func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRequest) (*proto.Response, error) {
@@ -495,7 +495,7 @@ func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRe
 // @ID update-category
 // @Accept  json
 // @Produce  json
-// @Param category_uuid path int true "Category uuid"
+// @Param category_uuid body int true "Category uuid"
 // @Param name path string true "Category name"
 // @Param parent_uuid path int true "Parent id"
 // @Success 200 {object} bool

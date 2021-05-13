@@ -18,7 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrdersServiceClient interface {
-	CreateOrder(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*BookData, error)
+	CreateOrder(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*Response, error)
 	GetOrderData(ctx context.Context, in *OrderId, opts ...grpc.CallOption) (*OrderData, error)
 	Paginate(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (OrdersService_PaginateClient, error)
 }
@@ -31,8 +31,8 @@ func NewOrdersServiceClient(cc grpc.ClientConnInterface) OrdersServiceClient {
 	return &ordersServiceClient{cc}
 }
 
-func (c *ordersServiceClient) CreateOrder(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*BookData, error) {
-	out := new(BookData)
+func (c *ordersServiceClient) CreateOrder(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
 	err := c.cc.Invoke(ctx, "/proto.OrdersService/CreateOrder", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func (x *ordersServicePaginateClient) Recv() (*OrderData, error) {
 // All implementations must embed UnimplementedOrdersServiceServer
 // for forward compatibility
 type OrdersServiceServer interface {
-	CreateOrder(context.Context, *CreateOrderRequest) (*BookData, error)
+	CreateOrder(context.Context, *CreateOrderRequest) (*Response, error)
 	GetOrderData(context.Context, *OrderId) (*OrderData, error)
 	Paginate(*PageNumber, OrdersService_PaginateServer) error
 	mustEmbedUnimplementedOrdersServiceServer()
@@ -95,7 +95,7 @@ type OrdersServiceServer interface {
 type UnimplementedOrdersServiceServer struct {
 }
 
-func (UnimplementedOrdersServiceServer) CreateOrder(context.Context, *CreateOrderRequest) (*BookData, error) {
+func (UnimplementedOrdersServiceServer) CreateOrder(context.Context, *CreateOrderRequest) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateOrder not implemented")
 }
 func (UnimplementedOrdersServiceServer) GetOrderData(context.Context, *OrderId) (*OrderData, error) {

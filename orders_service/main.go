@@ -34,7 +34,7 @@ func main() {
 	client2 := proto.NewBooksServiceClient(conn2)
 	g := gin.Default()
 
-	g.POST("/create", func(ctx *gin.Context) {
+	g.POST("/create-order", func(ctx *gin.Context) {
 		bookUuid, err := strconv.ParseUint(ctx.PostForm("book_uuid"), 10, 64)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param book_uuid"})

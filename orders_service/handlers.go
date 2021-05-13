@@ -46,15 +46,16 @@ func main() {
 }
 
 // CreateOrder godoc
-// @Summary Create a new order
-// @Description Create an order by book ID. Also the description can be provided
+// @Summary Created an order
+// @Description allows to buy a book and return the information about it
 // @ID create-order
-// @Accept json
-// @Produce json
-// @Param book_uuid body int64 true
-// @Param description body string false
-
-func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequest) (*proto.BookData, error) {
+// @Accept  json
+// @Produce  json
+// @Param book_uuid body int true "Book uuid"
+// @Param description body string true "Author name"
+// @Success 200 {object} bool
+// @Router /create-order [post]
+func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequest) (*proto.Response, error) {
 	bookUuid, description := request.GetBookUuid(), request.GetDescription()
 
 	insertQuery := `INSERT INTO orders(book_uuid, description) VALUES(?,?)`
@@ -62,12 +63,21 @@ func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequ
 	_, err := db.Exec(insertQuery, bookUuid, description)
 
 	if err != nil {
-		return &proto.BookData{Result: ""}, err
+		return &proto.Response{Success: false}, err
 	}
 
-	return &proto.BookData{Result: "Test"}, nil
+	return &proto.Response{Success: true}, nil
 }
 
+// GetOrderData godoc
+// @Summary Get the specific order data
+// @Description shows the basic information about the specific order
+// @ID get-order-data
+// @Accept  json
+// @Produce  json
+// @Param order_uuid path int true "Order uuid"
+// @Success 200 {object} object
+// @Router /show/{order_uuid} [get]
 func (s *server) GetOrderData(ctx context.Context, request *proto.OrderId) (*proto.OrderData, error) {
 	orderUuid := request.GetOrderUuid()
 	order := Order{}

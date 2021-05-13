@@ -5,5 +5,52 @@ info:
   description: Allows to create orders
   title: Orders service api
   version: "1.0"
-paths: {}
+paths:
+  /create-order:
+    post:
+      consumes:
+      - application/json
+      description: allows to buy a book and return the information about it
+      operationId: create-order
+      parameters:
+      - description: Book uuid
+        in: body
+        name: book_uuid
+        required: true
+        schema:
+          type: integer
+      - description: Author name
+        in: body
+        name: description
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+      summary: Created an order
+  /get-order-data:
+    get:
+      consumes:
+      - application/json
+      description: shows the basic information about the specific order
+      operationId: get-order-data
+      parameters:
+      - description: Order uuid
+        in: path
+        name: order_uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Get the specific order data
 swagger: "2.0"
