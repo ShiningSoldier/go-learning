@@ -14,20 +14,23 @@ paths:
       operationId: add-book
       parameters:
       - description: Book name
-        in: path
+        in: body
         name: name
         required: true
-        type: string
+        schema:
+          type: string
       - description: List of category iIDs
-        in: path
+        in: body
         name: category_uuid
         required: true
-        type: string
+        schema:
+          type: string
       - description: Book author ID
-        in: path
+        in: body
         name: author_uuid
         required: true
-        type: integer
+        schema:
+          type: integer
       produces:
       - application/json
       responses:
@@ -44,10 +47,11 @@ paths:
       operationId: create-author
       parameters:
       - description: Author name
-        in: path
+        in: body
         name: name
         required: true
-        type: string
+        schema:
+          type: string
       produces:
       - application/json
       responses:
@@ -64,15 +68,17 @@ paths:
       operationId: create-category
       parameters:
       - description: Category name
-        in: path
+        in: body
         name: name
         required: true
-        type: string
+        schema:
+          type: string
       - description: Parent id
-        in: path
+        in: body
         name: parent_id
         required: true
-        type: integer
+        schema:
+          type: integer
       produces:
       - application/json
       responses:
@@ -161,7 +167,7 @@ paths:
           schema:
             type: string
       summary: Shows all books by specified author
-  /filter-by-author/{category_uuid}:
+  /filter-by-category/{category_uuid}:
     get:
       consumes:
       - application/json
@@ -269,25 +275,29 @@ paths:
       operationId: update-book
       parameters:
       - description: Book uuid
-        in: path
+        in: body
         name: book_uuid
         required: true
-        type: integer
+        schema:
+          type: integer
       - description: Book name
-        in: path
+        in: body
         name: name
         required: true
-        type: string
+        schema:
+          type: string
       - description: List of category iIDs
-        in: path
+        in: body
         name: category_uuid
         required: true
-        type: string
+        schema:
+          type: string
       - description: Book author ID
-        in: path
+        in: body
         name: author_uuid
         required: true
-        type: integer
+        schema:
+          type: integer
       produces:
       - application/json
       responses:
@@ -304,15 +314,17 @@ paths:
       operationId: update-author
       parameters:
       - description: Author uuid
-        in: path
+        in: body
         name: author_uuid
         required: true
-        type: integer
+        schema:
+          type: integer
       - description: Author name
-        in: path
+        in: body
         name: name
         required: true
-        type: string
+        schema:
+          type: string
       produces:
       - application/json
       responses:
@@ -329,10 +341,11 @@ paths:
       operationId: update-category
       parameters:
       - description: Category uuid
-        in: path
+        in: body
         name: category_uuid
         required: true
-        type: integer
+        schema:
+          type: integer
       - description: Category name
         in: path
         name: name

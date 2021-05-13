@@ -69,8 +69,8 @@ func main() {
 // @Accept  json
 // @Produce  json
 // @Param name body string true "Book name"
-// @Param category_uuid path string true "List of category iIDs"
-// @Param author_uuid path int true "Book author ID"
+// @Param category_uuid body string true "List of category iIDs"
+// @Param author_uuid body int true "Book author ID"
 // @Success 200 {object} bool
 // @Router /add [post]
 func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*proto.Response, error) {
@@ -353,7 +353,7 @@ func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*
 // @Produce  json
 // @Param category_uuid path int true "Category uuid"
 // @Success 200 {object} string
-// @Router /filter-by-author/{category_uuid} [get]
+// @Router /filter-by-category/{category_uuid} [get]
 func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId) (*proto.BookData, error) {
 	categoryUuid := request.GetCategoryUuid()
 	books := []Book{}

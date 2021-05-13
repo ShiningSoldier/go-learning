@@ -36,25 +36,31 @@ var doc = `{
                 "operationId": "add-book",
                 "parameters": [
                     {
-                        "type": "string",
                         "description": "Book name",
                         "name": "name",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
-                        "type": "string",
                         "description": "List of category iIDs",
                         "name": "category_uuid",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
-                        "type": "integer",
                         "description": "Book author ID",
                         "name": "author_uuid",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -80,11 +86,13 @@ var doc = `{
                 "operationId": "create-author",
                 "parameters": [
                     {
-                        "type": "string",
                         "description": "Author name",
                         "name": "name",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -110,18 +118,22 @@ var doc = `{
                 "operationId": "create-category",
                 "parameters": [
                     {
-                        "type": "string",
                         "description": "Category name",
                         "name": "name",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
-                        "type": "integer",
                         "description": "Parent id",
                         "name": "parent_id",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -254,7 +266,7 @@ var doc = `{
                 }
             }
         },
-        "/filter-by-author/{category_uuid}": {
+        "/filter-by-category/{category_uuid}": {
             "get": {
                 "description": "shows the basic data of books by category",
                 "consumes": [
@@ -417,32 +429,40 @@ var doc = `{
                 "operationId": "update-book",
                 "parameters": [
                     {
-                        "type": "integer",
                         "description": "Book uuid",
                         "name": "book_uuid",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     },
                     {
-                        "type": "string",
                         "description": "Book name",
                         "name": "name",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
-                        "type": "string",
                         "description": "List of category iIDs",
                         "name": "category_uuid",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
-                        "type": "integer",
                         "description": "Book author ID",
                         "name": "author_uuid",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -468,18 +488,22 @@ var doc = `{
                 "operationId": "update-author",
                 "parameters": [
                     {
-                        "type": "integer",
                         "description": "Author uuid",
                         "name": "author_uuid",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     },
                     {
-                        "type": "string",
                         "description": "Author name",
                         "name": "name",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -505,11 +529,13 @@ var doc = `{
                 "operationId": "update-category",
                 "parameters": [
                     {
-                        "type": "integer",
                         "description": "Category uuid",
                         "name": "category_uuid",
-                        "in": "path",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     },
                     {
                         "type": "string",
