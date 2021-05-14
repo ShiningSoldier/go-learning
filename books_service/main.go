@@ -50,12 +50,9 @@ func main() {
 
 	g.POST("/add-category", func(ctx *gin.Context) {
 		name := ctx.PostForm("name")
-		parentId, err := strconv.ParseUint(ctx.PostForm("parent_id"), 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param parent_id"})
-		}
+		parentUuid := ctx.PostForm("parent_uuid")
 
-		req := &proto.AddCategoryRequest{Name: name, ParentUuid: int64(parentId)}
+		req := &proto.AddCategoryRequest{Name: name, ParentUuid: parentUuid}
 		if response, err := client.AddCategory(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{
 				"result": fmt.Sprint(response.Success),

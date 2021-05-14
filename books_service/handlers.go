@@ -3,6 +3,7 @@ package main
 import (
 	proto "./proto"
 	"context"
+	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -37,8 +38,9 @@ type BooksCategories struct {
 }
 
 type Category struct {
-	Name        string `json:"name"`
-	Parent_uuid int    `json:"parent_uuid"`
+	Name        string         `json:"name"`
+	Parent_uuid int            `json:"parent_uuid"`
+	Parent_name sql.NullString `json:"parent_name"`
 }
 
 func main() {
@@ -230,11 +232,14 @@ func getCategories(bookUuid int64) string {
 // @Accept  json
 // @Produce  json
 // @Param name body string true "Category name"
-// @Param parent_id body int true "Parent id"
+// @Param parent_uuid body string false "Parent id"
 // @Success 200 {object} bool
 // @Router /add-category [post]
 func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequest) (*proto.Response, error) {
 	name, parentId := request.GetName(), request.GetParentUuid()
+	if len(parentId) == 0 {
+		parentId = "0"
+	}
 	insertQuery := `INSERT INTO categories(name, parent_uuid) VALUES(?,?)`
 
 	_, err := db.Exec(insertQuery, name, parentId)
@@ -302,14 +307,17 @@ func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*
 	categoryUuid := request.GetCategoryUuid()
 	category := Category{}
 
-	selectQuery := `SELECT name, parent_uuid FROM categories WHERE deleted_at IS NULL AND categories.uuid = ?`
+	selectQuery := `SELECT c.name, c.parent_uuid, c2.name AS parent_name
+    FROM categories c
+    LEFT JOIN categories c2 ON c.parent_uuid = c2.uuid
+    WHERE c.deleted_at IS NULL AND c.uuid = ?`
 
 	err := db.Get(&category, selectQuery, categoryUuid)
 	if err != nil {
 		return &proto.CategoryData{Result: ""}, err
 	}
 
-	return &proto.CategoryData{Result: fmt.Sprintf("Category name: %s, parent: %d", category.Name, category.Parent_uuid)}, nil
+	return &proto.CategoryData{Result: fmt.Sprintf("Category name: %s, parent category: %s", category.Name, category.Parent_name.String)}, nil
 }
 
 // FilterByAuthor godoc
