@@ -18,7 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BooksServiceClient interface {
-	AddBook(ctx context.Context, in *AddBookRequest, opts ...grpc.CallOption) (*Response, error)
+	AddBook(ctx context.Context, in *AddBookRequest, opts ...grpc.CallOption) (*BookId, error)
 	UpdateBook(ctx context.Context, in *UpdateBookRequest, opts ...grpc.CallOption) (*Response, error)
 	DeleteBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*Response, error)
 	ShowBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*BookData, error)
@@ -43,8 +43,8 @@ func NewBooksServiceClient(cc grpc.ClientConnInterface) BooksServiceClient {
 	return &booksServiceClient{cc}
 }
 
-func (c *booksServiceClient) AddBook(ctx context.Context, in *AddBookRequest, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *booksServiceClient) AddBook(ctx context.Context, in *AddBookRequest, opts ...grpc.CallOption) (*BookId, error) {
+	out := new(BookId)
 	err := c.cc.Invoke(ctx, "/proto.BooksService/AddBook", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -182,7 +182,7 @@ func (c *booksServiceClient) DeleteAuthor(ctx context.Context, in *AuthorId, opt
 // All implementations must embed UnimplementedBooksServiceServer
 // for forward compatibility
 type BooksServiceServer interface {
-	AddBook(context.Context, *AddBookRequest) (*Response, error)
+	AddBook(context.Context, *AddBookRequest) (*BookId, error)
 	UpdateBook(context.Context, *UpdateBookRequest) (*Response, error)
 	DeleteBook(context.Context, *BookId) (*Response, error)
 	ShowBook(context.Context, *BookId) (*BookData, error)
@@ -204,7 +204,7 @@ type BooksServiceServer interface {
 type UnimplementedBooksServiceServer struct {
 }
 
-func (UnimplementedBooksServiceServer) AddBook(context.Context, *AddBookRequest) (*Response, error) {
+func (UnimplementedBooksServiceServer) AddBook(context.Context, *AddBookRequest) (*BookId, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddBook not implemented")
 }
 func (UnimplementedBooksServiceServer) UpdateBook(context.Context, *UpdateBookRequest) (*Response, error) {

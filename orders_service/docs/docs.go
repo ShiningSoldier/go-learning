@@ -64,7 +64,7 @@ var doc = `{
                 }
             }
         },
-        "/get-order-data": {
+        "/show/{order_uuid}": {
             "get": {
                 "description": "shows the basic information about the specific order",
                 "consumes": [

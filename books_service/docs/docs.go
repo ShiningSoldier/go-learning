@@ -67,7 +67,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "boolean"
+                            "type": "int"
                         }
                     }
                 }
@@ -128,11 +128,10 @@ var doc = `{
                     },
                     {
                         "description": "Parent id",
-                        "name": "parent_id",
+                        "name": "parent_uuid",
                         "in": "body",
-                        "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],

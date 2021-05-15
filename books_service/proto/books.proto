@@ -40,6 +40,13 @@ message BookId {
   int64 book_uuid = 1;
 }
 
+message Book {
+  int64 book_uuid = 1;
+  string name = 2;
+  string author = 3;
+  string categories = 4;
+}
+
 message BookData {
   string result = 1;
 }
@@ -69,8 +76,8 @@ message Response {
 }
 
 service BooksService {
-  rpc AddBook(AddBookRequest) returns (Response);
-  rpc UpdateBook(UpdateBookRequest) returns (Response);
+  rpc AddBook(AddBookRequest) returns (BookId);
+  rpc UpdateBook(UpdateBookRequest) returns (Book);
   rpc DeleteBook(BookId) returns (Response);
   rpc ShowBook(BookId) returns (BookData);
   rpc FilterByAuthor(AuthorId) returns (BookData);

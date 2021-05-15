@@ -33,7 +33,7 @@ paths:
           schema:
             type: boolean
       summary: Created an order
-  /get-order-data:
+  /show/{order_uuid}:
     get:
       consumes:
       - application/json

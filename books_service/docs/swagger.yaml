@@ -37,7 +37,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: boolean
+            type: int
       summary: Creates a new book
   /add-author:
     post:
@@ -75,10 +75,9 @@ paths:
           type: string
       - description: Parent id
         in: body
-        name: parent_id
-        required: true
+        name: parent_uuid
         schema:
-          type: integer
+          type: string
       produces:
       - application/json
       responses:

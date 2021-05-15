@@ -73,28 +73,28 @@ func main() {
 // @Param name body string true "Book name"
 // @Param category_uuid body string true "List of category iIDs"
 // @Param author_uuid body int true "Book author ID"
-// @Success 200 {object} bool
+// @Success 200 {int} int
 // @Router /add [post]
-func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*proto.Response, error) {
+func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*proto.BookId, error) {
 	name, category, author := request.GetBookName(), request.GetCategoryId(), request.GetAuthorId()
 	categoriesSlice := strings.Split(category, ",")
 	insertQuery := `INSERT INTO books(name, author_id) VALUES(?,?)`
 
 	row, err := db.Exec(insertQuery, name, author)
 	if err != nil {
-		return &proto.Response{Success: false}, err
+		return &proto.BookId{BookUuid: 0}, err
 	}
 	lastInsertedId, err := row.LastInsertId()
 	if err != nil {
-		return &proto.Response{Success: false}, err
+		return &proto.BookId{BookUuid: 0}, err
 	}
 
 	err = addCategories(lastInsertedId, categoriesSlice)
 	if err != nil {
-		return &proto.Response{Success: false}, err
+		return &proto.BookId{BookUuid: 0}, err
 	}
 
-	return &proto.Response{Success: true}, nil
+	return &proto.BookId{BookUuid: lastInsertedId}, nil
 }
 
 // UpdateBook godoc
@@ -200,7 +200,7 @@ func getBookData(bookUuid int64) (string, error) {
 	}
 
 	categories := getCategories(bookUuid)
-	result := fmt.Sprintf("Book name: %s, author name: %s, categories: %s", book.Name, book.Author.Name, strings.TrimSpace(categories))
+	result := fmt.Sprintf("Book uuid: %d, Book name: %s, author name: %s, categories: %s", book.Uuid, book.Name, book.Author.Name, strings.TrimSpace(categories))
 
 	return result, nil
 }

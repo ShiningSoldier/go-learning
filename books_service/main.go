@@ -41,7 +41,7 @@ func main() {
 		req := &proto.AddBookRequest{BookName: name, CategoryId: string(categoryId), AuthorId: int64(authorId)}
 		if response, err := client.AddBook(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Success),
+				"result": fmt.Sprint(response.BookUuid),
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
