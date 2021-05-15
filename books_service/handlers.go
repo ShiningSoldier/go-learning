@@ -73,28 +73,60 @@ func main() {
 // @Param name body string true "Book name"
 // @Param category_uuid body string true "List of category iIDs"
 // @Param author_uuid body int true "Book author ID"
-// @Success 200 {int} int
+// @Success 200 {object} main.Book
 // @Router /add [post]
-func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*proto.BookId, error) {
+func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*proto.Book, error) {
 	name, category, author := request.GetBookName(), request.GetCategoryId(), request.GetAuthorId()
 	categoriesSlice := strings.Split(category, ",")
-	insertQuery := `INSERT INTO books(name, author_id) VALUES(?,?)`
+	insertQuery := `INSERT INTO books(name, author_uuid) VALUES(?,?)`
 
 	row, err := db.Exec(insertQuery, name, author)
 	if err != nil {
-		return &proto.BookId{BookUuid: 0}, err
+		return &proto.Book{
+			BookUuid:   0,
+			Name:       "",
+			Author:     "",
+			Categories: "",
+		}, err
 	}
 	lastInsertedId, err := row.LastInsertId()
 	if err != nil {
-		return &proto.BookId{BookUuid: 0}, err
+		return &proto.Book{
+			BookUuid:   0,
+			Name:       "",
+			Author:     "",
+			Categories: "",
+		}, err
 	}
 
 	err = addCategories(lastInsertedId, categoriesSlice)
 	if err != nil {
-		return &proto.BookId{BookUuid: 0}, err
+		return &proto.Book{
+			BookUuid:   0,
+			Name:       "",
+			Author:     "",
+			Categories: "",
+		}, err
 	}
 
-	return &proto.BookId{BookUuid: lastInsertedId}, nil
+	authorData, err := getAuthor(author)
+	if err != nil {
+		return &proto.Book{
+			BookUuid:   0,
+			Name:       "",
+			Author:     "",
+			Categories: "",
+		}, err
+	}
+
+	categories := getCategories(lastInsertedId)
+
+	return &proto.Book{
+		BookUuid:   lastInsertedId,
+		Name:       name,
+		Author:     authorData.Name,
+		Categories: categories,
+	}, nil
 }
 
 // UpdateBook godoc
@@ -107,24 +139,51 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 // @Param name body string true "Book name"
 // @Param category_uuid body string true "List of category iIDs"
 // @Param author_uuid body int true "Book author ID"
-// @Success 200 {object} bool
+// @Success 200 {object} main.Book
 // @Router /update [put]
-func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookRequest) (*proto.Response, error) {
+func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookRequest) (*proto.Book, error) {
 	bookUuid, name, category, author, currentTimestamp := request.GetBookUuid(), request.GetBookName(), request.GetCategoryId(), request.GetAuthorId(), time.Now().Format("2006-01-02 15:04:05")
 	categoriesSlice := strings.Split(category, ",")
-	updateQuery := `UPDATE books SET name = ?, author_id = ?, updated_at = ? WHERE uuid = ?`
+	updateQuery := `UPDATE books SET name = ?, author_uuid = ?, updated_at = ? WHERE uuid = ?`
 
 	_, err := db.Exec(updateQuery, name, author, currentTimestamp, bookUuid)
 	if err != nil {
-		return &proto.Response{Success: false}, err
+		return &proto.Book{
+			BookUuid:   0,
+			Name:       "",
+			Author:     "",
+			Categories: "",
+		}, err
 	}
 
 	err = addCategories(bookUuid, categoriesSlice)
 	if err != nil {
-		return &proto.Response{Success: false}, err
+		return &proto.Book{
+			BookUuid:   0,
+			Name:       "",
+			Author:     "",
+			Categories: "",
+		}, err
 	}
 
-	return &proto.Response{Success: true}, nil
+	authorData, err := getAuthor(author)
+	if err != nil {
+		return &proto.Book{
+			BookUuid:   0,
+			Name:       "",
+			Author:     "",
+			Categories: "",
+		}, err
+	}
+
+	categories := getCategories(bookUuid)
+
+	return &proto.Book{
+		BookUuid:   bookUuid,
+		Name:       name,
+		Author:     authorData.Name,
+		Categories: categories,
+	}, nil
 }
 
 func addCategories(bookUuid int64, categoriesSlice []string) error {
@@ -222,7 +281,7 @@ func getCategories(bookUuid int64) string {
 		categories = categories + item.Category.Name + "; "
 	}
 
-	return categories
+	return strings.TrimSpace(categories)
 }
 
 // AddCategory godoc
@@ -233,21 +292,37 @@ func getCategories(bookUuid int64) string {
 // @Produce  json
 // @Param name body string true "Category name"
 // @Param parent_uuid body string false "Parent id"
-// @Success 200 {object} bool
+// @Success 200 {object} main.Category
 // @Router /add-category [post]
-func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequest) (*proto.Response, error) {
-	name, parentId := request.GetName(), request.GetParentUuid()
-	if len(parentId) == 0 {
-		parentId = "0"
+func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequest) (*proto.Category, error) {
+	name, parentUuid := request.GetName(), request.GetParentUuid()
+	if len(parentUuid) == 0 {
+		parentUuid = "0"
 	}
 	insertQuery := `INSERT INTO categories(name, parent_uuid) VALUES(?,?)`
 
-	_, err := db.Exec(insertQuery, name, parentId)
+	row, err := db.Exec(insertQuery, name, parentUuid)
 	if err != nil {
-		return &proto.Response{Success: false}, err
+		return &proto.Category{
+			CategoryUuid: 0,
+			ParentUuid:   "",
+			Name:         "",
+		}, err
+	}
+	lastInsertedId, err := row.LastInsertId()
+	if err != nil {
+		return &proto.Category{
+			CategoryUuid: 0,
+			ParentUuid:   "",
+			Name:         "",
+		}, err
 	}
 
-	return &proto.Response{Success: true}, nil
+	return &proto.Category{
+		CategoryUuid: lastInsertedId,
+		ParentUuid:   parentUuid,
+		Name:         name,
+	}, nil
 }
 
 // AddAuthor godoc
@@ -257,18 +332,32 @@ func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequ
 // @Accept  json
 // @Produce  json
 // @Param name body string true "Author name"
-// @Success 200 {object} bool
+// @Success 200 {object} main.Author
 // @Router /add-author [post]
-func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest) (*proto.Response, error) {
+func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest) (*proto.Author, error) {
 	name := request.GetName()
 	insertQuery := `INSERT INTO authors(name) VALUES(?)`
 
-	_, err := db.Exec(insertQuery, name)
+	row, err := db.Exec(insertQuery, name)
 	if err != nil {
-		return &proto.Response{Success: false}, err
+		return &proto.Author{
+			AuthorUuid: 0,
+			Name:       "",
+		}, err
 	}
 
-	return &proto.Response{Success: true}, nil
+	lastInsertedId, err := row.LastInsertId()
+	if err != nil {
+		return &proto.Author{
+			AuthorUuid: 0,
+			Name:       "",
+		}, err
+	}
+
+	return &proto.Author{
+		AuthorUuid: lastInsertedId,
+		Name:       name,
+	}, nil
 }
 
 // ShowAuthor godoc
@@ -282,16 +371,20 @@ func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest)
 // @Router /show-author/{author_uuid} [get]
 func (s *server) ShowAuthor(ctx context.Context, request *proto.AuthorId) (*proto.AuthorData, error) {
 	authorUuid := request.GetAuthorUuid()
-	author := Author{}
-
-	selectQuery := `SELECT name FROM authors WHERE deleted_at IS NULL AND uuid = ?`
-
-	err := db.Get(&author, selectQuery, authorUuid)
+	author, err := getAuthor(authorUuid)
 	if err != nil {
 		return &proto.AuthorData{Result: ""}, err
 	}
 
 	return &proto.AuthorData{Result: fmt.Sprintf("Author name: %s", author.Name)}, nil
+}
+
+func getAuthor(authorUuid int64) (Author, error) {
+	author := Author{}
+	selectQuery := `SELECT name FROM authors WHERE deleted_at IS NULL AND uuid = ?`
+	err := db.Get(&author, selectQuery, authorUuid)
+
+	return author, err
 }
 
 // ShowCategory godoc
@@ -434,11 +527,23 @@ func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*prot
 // @Router /delete-author/{author_uuid} [delete]
 func (s *server) DeleteAuthor(ctx context.Context, request *proto.AuthorId) (*proto.Response, error) {
 	authorUuid := request.GetAuthorUuid()
+	books := []Book{}
 
 	err := deleteEntity("authors", authorUuid)
-
 	if err != nil {
 		return &proto.Response{Success: false}, err
+	}
+	selectBooksQuery := `SELECT uuid FROM books WHERE author_uuid = ?`
+	err = db.Select(&books, selectBooksQuery, authorUuid)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
+
+	for _, item := range books {
+		err := deleteEntity("books", int64(item.Uuid))
+		if err != nil {
+			return &proto.Response{Success: false}, err
+		}
 	}
 
 	return &proto.Response{Success: true}, nil
@@ -546,11 +651,11 @@ func handleDatabase() {
 	booksQuery := `CREATE TABLE IF NOT EXISTS books (
         uuid INT PRIMARY KEY AUTO_INCREMENT,
         name VARCHAR(60) NOT NULL,
-        author_id INT NOT NULL,
+        author_uuid INT NOT NULL,
         created_at datetime default CURRENT_TIMESTAMP,
         updated_at datetime default CURRENT_TIMESTAMP,
         deleted_at datetime,
-        FOREIGN KEY (author_id) REFERENCES authors(uuid) ON DELETE CASCADE
+        FOREIGN KEY (author_uuid) REFERENCES authors(uuid) ON DELETE CASCADE
     )`
 
 	db.MustExec(booksQuery)

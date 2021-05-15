@@ -18,15 +18,15 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BooksServiceClient interface {
-	AddBook(ctx context.Context, in *AddBookRequest, opts ...grpc.CallOption) (*BookId, error)
-	UpdateBook(ctx context.Context, in *UpdateBookRequest, opts ...grpc.CallOption) (*Response, error)
+	AddBook(ctx context.Context, in *AddBookRequest, opts ...grpc.CallOption) (*Book, error)
+	UpdateBook(ctx context.Context, in *UpdateBookRequest, opts ...grpc.CallOption) (*Book, error)
 	DeleteBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*Response, error)
 	ShowBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*BookData, error)
 	FilterByAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*BookData, error)
 	FilterByCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*BookData, error)
 	Paginate(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (*BookData, error)
-	AddAuthor(ctx context.Context, in *AddAuthorRequest, opts ...grpc.CallOption) (*Response, error)
-	AddCategory(ctx context.Context, in *AddCategoryRequest, opts ...grpc.CallOption) (*Response, error)
+	AddAuthor(ctx context.Context, in *AddAuthorRequest, opts ...grpc.CallOption) (*Author, error)
+	AddCategory(ctx context.Context, in *AddCategoryRequest, opts ...grpc.CallOption) (*Category, error)
 	ShowAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*AuthorData, error)
 	UpdateAuthor(ctx context.Context, in *UpdateAuthorRequest, opts ...grpc.CallOption) (*Response, error)
 	UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*Response, error)
@@ -43,8 +43,8 @@ func NewBooksServiceClient(cc grpc.ClientConnInterface) BooksServiceClient {
 	return &booksServiceClient{cc}
 }
 
-func (c *booksServiceClient) AddBook(ctx context.Context, in *AddBookRequest, opts ...grpc.CallOption) (*BookId, error) {
-	out := new(BookId)
+func (c *booksServiceClient) AddBook(ctx context.Context, in *AddBookRequest, opts ...grpc.CallOption) (*Book, error) {
+	out := new(Book)
 	err := c.cc.Invoke(ctx, "/proto.BooksService/AddBook", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -52,8 +52,8 @@ func (c *booksServiceClient) AddBook(ctx context.Context, in *AddBookRequest, op
 	return out, nil
 }
 
-func (c *booksServiceClient) UpdateBook(ctx context.Context, in *UpdateBookRequest, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *booksServiceClient) UpdateBook(ctx context.Context, in *UpdateBookRequest, opts ...grpc.CallOption) (*Book, error) {
+	out := new(Book)
 	err := c.cc.Invoke(ctx, "/proto.BooksService/UpdateBook", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -106,8 +106,8 @@ func (c *booksServiceClient) Paginate(ctx context.Context, in *PageNumber, opts 
 	return out, nil
 }
 
-func (c *booksServiceClient) AddAuthor(ctx context.Context, in *AddAuthorRequest, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *booksServiceClient) AddAuthor(ctx context.Context, in *AddAuthorRequest, opts ...grpc.CallOption) (*Author, error) {
+	out := new(Author)
 	err := c.cc.Invoke(ctx, "/proto.BooksService/AddAuthor", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -115,8 +115,8 @@ func (c *booksServiceClient) AddAuthor(ctx context.Context, in *AddAuthorRequest
 	return out, nil
 }
 
-func (c *booksServiceClient) AddCategory(ctx context.Context, in *AddCategoryRequest, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *booksServiceClient) AddCategory(ctx context.Context, in *AddCategoryRequest, opts ...grpc.CallOption) (*Category, error) {
+	out := new(Category)
 	err := c.cc.Invoke(ctx, "/proto.BooksService/AddCategory", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -182,15 +182,15 @@ func (c *booksServiceClient) DeleteAuthor(ctx context.Context, in *AuthorId, opt
 // All implementations must embed UnimplementedBooksServiceServer
 // for forward compatibility
 type BooksServiceServer interface {
-	AddBook(context.Context, *AddBookRequest) (*BookId, error)
-	UpdateBook(context.Context, *UpdateBookRequest) (*Response, error)
+	AddBook(context.Context, *AddBookRequest) (*Book, error)
+	UpdateBook(context.Context, *UpdateBookRequest) (*Book, error)
 	DeleteBook(context.Context, *BookId) (*Response, error)
 	ShowBook(context.Context, *BookId) (*BookData, error)
 	FilterByAuthor(context.Context, *AuthorId) (*BookData, error)
 	FilterByCategory(context.Context, *CategoryId) (*BookData, error)
 	Paginate(context.Context, *PageNumber) (*BookData, error)
-	AddAuthor(context.Context, *AddAuthorRequest) (*Response, error)
-	AddCategory(context.Context, *AddCategoryRequest) (*Response, error)
+	AddAuthor(context.Context, *AddAuthorRequest) (*Author, error)
+	AddCategory(context.Context, *AddCategoryRequest) (*Category, error)
 	ShowAuthor(context.Context, *AuthorId) (*AuthorData, error)
 	UpdateAuthor(context.Context, *UpdateAuthorRequest) (*Response, error)
 	UpdateCategory(context.Context, *UpdateCategoryRequest) (*Response, error)
@@ -204,10 +204,10 @@ type BooksServiceServer interface {
 type UnimplementedBooksServiceServer struct {
 }
 
-func (UnimplementedBooksServiceServer) AddBook(context.Context, *AddBookRequest) (*BookId, error) {
+func (UnimplementedBooksServiceServer) AddBook(context.Context, *AddBookRequest) (*Book, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddBook not implemented")
 }
-func (UnimplementedBooksServiceServer) UpdateBook(context.Context, *UpdateBookRequest) (*Response, error) {
+func (UnimplementedBooksServiceServer) UpdateBook(context.Context, *UpdateBookRequest) (*Book, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBook not implemented")
 }
 func (UnimplementedBooksServiceServer) DeleteBook(context.Context, *BookId) (*Response, error) {
@@ -225,10 +225,10 @@ func (UnimplementedBooksServiceServer) FilterByCategory(context.Context, *Catego
 func (UnimplementedBooksServiceServer) Paginate(context.Context, *PageNumber) (*BookData, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Paginate not implemented")
 }
-func (UnimplementedBooksServiceServer) AddAuthor(context.Context, *AddAuthorRequest) (*Response, error) {
+func (UnimplementedBooksServiceServer) AddAuthor(context.Context, *AddAuthorRequest) (*Author, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddAuthor not implemented")
 }
-func (UnimplementedBooksServiceServer) AddCategory(context.Context, *AddCategoryRequest) (*Response, error) {
+func (UnimplementedBooksServiceServer) AddCategory(context.Context, *AddCategoryRequest) (*Category, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddCategory not implemented")
 }
 func (UnimplementedBooksServiceServer) ShowAuthor(context.Context, *AuthorId) (*AuthorData, error) {

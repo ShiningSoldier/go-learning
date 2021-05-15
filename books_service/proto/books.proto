@@ -47,6 +47,17 @@ message Book {
   string categories = 4;
 }
 
+message Author {
+  int64 author_uuid = 1;
+  string name = 2;
+}
+
+message Category {
+  int64 category_uuid = 1;
+  string parent_uuid = 2;
+  string name = 3;
+}
+
 message BookData {
   string result = 1;
 }
@@ -76,15 +87,15 @@ message Response {
 }
 
 service BooksService {
-  rpc AddBook(AddBookRequest) returns (BookId);
+  rpc AddBook(AddBookRequest) returns (Book);
   rpc UpdateBook(UpdateBookRequest) returns (Book);
   rpc DeleteBook(BookId) returns (Response);
   rpc ShowBook(BookId) returns (BookData);
   rpc FilterByAuthor(AuthorId) returns (BookData);
   rpc FilterByCategory(CategoryId) returns (BookData);
   rpc Paginate(PageNumber) returns (BookData);
-  rpc AddAuthor(AddAuthorRequest) returns (Response);
-  rpc AddCategory(AddCategoryRequest) returns (Response);
+  rpc AddAuthor(AddAuthorRequest) returns (Author);
+  rpc AddCategory(AddCategoryRequest) returns (Category);
   rpc ShowAuthor(AuthorId) returns (AuthorData);
   rpc UpdateAuthor(UpdateAuthorRequest) returns (Response);
   rpc UpdateCategory(UpdateCategoryRequest) returns (Response);
