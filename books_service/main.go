@@ -210,7 +210,7 @@ func main() {
 
 		if response, err := client.FilterByAuthor(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Result),
+				"result": response,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -227,7 +227,7 @@ func main() {
 
 		if response, err := client.FilterByCategory(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Result),
+				"result": fmt.Sprint(response),
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -244,7 +244,7 @@ func main() {
 
 		if response, err := client.Paginate(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Result),
+				"result": response,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

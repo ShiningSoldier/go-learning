@@ -82,41 +82,21 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 
 	row, err := db.Exec(insertQuery, name, author)
 	if err != nil {
-		return &proto.Book{
-			BookUuid:   0,
-			Name:       "",
-			Author:     "",
-			Categories: "",
-		}, err
+		return &proto.Book{}, err
 	}
 	lastInsertedId, err := row.LastInsertId()
 	if err != nil {
-		return &proto.Book{
-			BookUuid:   0,
-			Name:       "",
-			Author:     "",
-			Categories: "",
-		}, err
+		return &proto.Book{}, err
 	}
 
 	err = addCategories(lastInsertedId, categoriesSlice)
 	if err != nil {
-		return &proto.Book{
-			BookUuid:   0,
-			Name:       "",
-			Author:     "",
-			Categories: "",
-		}, err
+		return &proto.Book{}, err
 	}
 
 	authorData, err := getAuthor(author)
 	if err != nil {
-		return &proto.Book{
-			BookUuid:   0,
-			Name:       "",
-			Author:     "",
-			Categories: "",
-		}, err
+		return &proto.Book{}, err
 	}
 
 	categories := getCategories(lastInsertedId)
@@ -148,32 +128,17 @@ func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookReques
 
 	_, err := db.Exec(updateQuery, name, author, currentTimestamp, bookUuid)
 	if err != nil {
-		return &proto.Book{
-			BookUuid:   0,
-			Name:       "",
-			Author:     "",
-			Categories: "",
-		}, err
+		return &proto.Book{}, err
 	}
 
 	err = addCategories(bookUuid, categoriesSlice)
 	if err != nil {
-		return &proto.Book{
-			BookUuid:   0,
-			Name:       "",
-			Author:     "",
-			Categories: "",
-		}, err
+		return &proto.Book{}, err
 	}
 
 	authorData, err := getAuthor(author)
 	if err != nil {
-		return &proto.Book{
-			BookUuid:   0,
-			Name:       "",
-			Author:     "",
-			Categories: "",
-		}, err
+		return &proto.Book{}, err
 	}
 
 	categories := getCategories(bookUuid)
@@ -307,29 +272,17 @@ func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequ
 
 	row, err := db.Exec(insertQuery, name, parentUuid)
 	if err != nil {
-		return &proto.Category{
-			CategoryUuid: 0,
-			ParentName:   "",
-			Name:         "",
-		}, err
+		return &proto.Category{}, err
 	}
 	lastInsertedId, err := row.LastInsertId()
 	if err != nil {
-		return &proto.Category{
-			CategoryUuid: 0,
-			ParentName:   "",
-			Name:         "",
-		}, err
+		return &proto.Category{}, err
 	}
 
 	if parentUuid != "0" {
 		err := db.Get(&parentCategory, `SELECT name FROM categories WHERE uuid = ?`, parentUuid)
 		if err != nil {
-			return &proto.Category{
-				CategoryUuid: 0,
-				ParentName:   "",
-				Name:         "",
-			}, err
+			return &proto.Category{}, err
 		}
 	}
 
@@ -355,18 +308,12 @@ func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest)
 
 	row, err := db.Exec(insertQuery, name)
 	if err != nil {
-		return &proto.Author{
-			AuthorUuid: 0,
-			Name:       "",
-		}, err
+		return &proto.Author{}, err
 	}
 
 	lastInsertedId, err := row.LastInsertId()
 	if err != nil {
-		return &proto.Author{
-			AuthorUuid: 0,
-			Name:       "",
-		}, err
+		return &proto.Author{}, err
 	}
 
 	return &proto.Author{
@@ -388,10 +335,7 @@ func (s *server) ShowAuthor(ctx context.Context, request *proto.AuthorId) (*prot
 	authorUuid := request.GetAuthorUuid()
 	author, err := getAuthor(authorUuid)
 	if err != nil {
-		return &proto.Author{
-			AuthorUuid: 0,
-			Name:       "",
-		}, err
+		return &proto.Author{}, err
 	}
 
 	return &proto.Author{
@@ -428,11 +372,7 @@ func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*
 
 	err := db.Get(&category, selectQuery, categoryUuid)
 	if err != nil {
-		return &proto.Category{
-			CategoryUuid: 0,
-			ParentName:   "",
-			Name:         "",
-		}, err
+		return &proto.Category{}, err
 	}
 
 	return &proto.Category{
@@ -449,30 +389,37 @@ func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*
 // @Accept  json
 // @Produce  json
 // @Param author_uuid path int true "Author uuid"
-// @Success 200 {object} string
+// @Success 200 {object} proto.Books
 // @Router /filter-by-author/{author_uuid} [get]
-func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*proto.BookData, error) {
+func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*proto.Books, error) {
 	authorUuid := request.GetAuthorUuid()
 	books := []Book{}
+	response := []*proto.Book{}
 
 	selectQuery := `SELECT books.uuid, books.name, authors.name "authors.name"
     FROM books
-    INNER JOIN authors ON authors.uuid = books.author_id
-    WHERE books.deleted_at IS NULL AND books.author_id = ?`
+    INNER JOIN authors ON authors.uuid = books.author_uuid
+    WHERE books.deleted_at IS NULL AND books.author_uuid = ?`
 
 	err := db.Select(&books, selectQuery, authorUuid)
 	if err != nil {
-		return &proto.BookData{Result: ""}, err
+		return &proto.Books{}, err
 	}
-
-	result := ""
 
 	for _, item := range books {
-		categories := getCategories(int64(item.Uuid))
-		result = result + fmt.Sprintf("Book name: %s, author name: %s, categories: %s", item.Name, item.Author.Name, categories)
+		uuid := int64(item.Uuid)
+		categories := getCategories(uuid)
+		ri := &proto.Book{
+			BookUuid:   uuid,
+			Name:       item.Name,
+			Author:     item.Author.Name,
+			Categories: categories,
+		}
+
+		response = append(response, ri)
 	}
 
-	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
+	return &proto.Books{Book: response}, nil
 }
 
 // FilterByCategory godoc
@@ -484,28 +431,35 @@ func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*
 // @Param category_uuid path int true "Category uuid"
 // @Success 200 {object} string
 // @Router /filter-by-category/{category_uuid} [get]
-func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId) (*proto.BookData, error) {
+func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId) (*proto.Books, error) {
 	categoryUuid := request.GetCategoryUuid()
 	books := []Book{}
+	response := []*proto.Book{}
 
 	selectQuery := `SELECT books.uuid, books.name, authors.name "authors.name" FROM books
-    INNER JOIN authors ON authors.uuid = books.author_id
+    INNER JOIN authors ON authors.uuid = books.author_uuid
     INNER JOIN books_categories ON books_categories.book_uuid = books.uuid
     WHERE books.deleted_at IS NULL AND books_categories.category_uuid = ?`
 
 	err := db.Select(&books, selectQuery, categoryUuid)
 	if err != nil {
-		return &proto.BookData{Result: ""}, err
+		return &proto.Books{}, err
 	}
-
-	result := ""
 
 	for _, item := range books {
-		categories := getCategories(int64(item.Uuid))
-		result = result + fmt.Sprintf("Book name: %s, author name: %s, categories: %s", item.Name, item.Author.Name, categories)
+		uuid := int64(item.Uuid)
+		categories := getCategories(uuid)
+		ri := &proto.Book{
+			BookUuid:   uuid,
+			Name:       item.Name,
+			Author:     item.Author.Name,
+			Categories: categories,
+		}
+
+		response = append(response, ri)
 	}
 
-	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
+	return &proto.Books{Book: response}, nil
 }
 
 // Paginate godoc
@@ -517,32 +471,36 @@ func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId
 // @Param page_number path int true "Page number"
 // @Success 200 {object} string
 // @Router /paginate/{page_number} [get]
-func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*proto.BookData, error) {
+func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*proto.Books, error) {
 	pageNumber := request.GetPageNumber()
 	offset := (pageNumber - 1) * 10
+	books := []Book{}
+	response := []*proto.Book{}
 
-	selectQuery := fmt.Sprintf("SELECT books.uuid, books.name, authors.name FROM books INNER JOIN authors ON authors.uuid = books.author_id WHERE books.deleted_at IS NULL LIMIT 10 OFFSET %d", offset)
+	selectQuery := `SELECT books.uuid, books.name, authors.name
+    FROM books
+	INNER JOIN authors ON authors.uuid = books.author_uuid
+    WHERE books.deleted_at IS NULL LIMIT 10 OFFSET ?`
 
-	row, err := db.Query(selectQuery)
+	err := db.Select(&books, selectQuery, offset)
 	if err != nil {
-		return &proto.BookData{Result: ""}, err
+		return &proto.Books{}, err
 	}
 
-	var (
-		uuid       int
-		name       string
-		authorName string
-		result     string
-	)
+	for _, item := range books {
+		uuid := int64(item.Uuid)
+		categories := getCategories(uuid)
+		ri := &proto.Book{
+			BookUuid:   uuid,
+			Name:       item.Name,
+			Author:     item.Author.Name,
+			Categories: categories,
+		}
 
-	for row.Next() {
-		err := row.Scan(&uuid, &name, &authorName)
-		checkErr(err)
-		categories := getCategories(int64(uuid))
-		result = result + fmt.Sprintf("Book uuid: %d, book name: %s, categories: %s", uuid, name, categories)
+		response = append(response, ri)
 	}
 
-	return &proto.BookData{Result: strings.TrimSpace(result)}, nil
+	return &proto.Books{Book: response}, nil
 }
 
 // DeleteAuthor godoc
