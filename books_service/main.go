@@ -62,7 +62,7 @@ func main() {
 		if response, err := client.AddCategory(ctx, req); err == nil {
 			result := [3]string{
 				strconv.FormatInt(response.CategoryUuid, 10),
-				response.ParentUuid,
+				response.ParentName,
 				response.Name,
 			}
 			ctx.JSON(http.StatusOK, gin.H{
@@ -143,8 +143,14 @@ func main() {
 		req := &proto.BookId{BookUuid: int64(bookUuid)}
 
 		if response, err := client.ShowBook(ctx, req); err == nil {
+			result := [4]string{
+				strconv.FormatInt(response.BookUuid, 10),
+				response.Name,
+				response.Author,
+				response.Categories,
+			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Result),
+				"result": result,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -160,8 +166,12 @@ func main() {
 		req := &proto.AuthorId{AuthorUuid: int64(authorUuid)}
 
 		if response, err := client.ShowAuthor(ctx, req); err == nil {
+			result := [2]string{
+				strconv.FormatInt(response.AuthorUuid, 10),
+				response.Name,
+			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Result),
+				"result": result,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -177,8 +187,13 @@ func main() {
 		req := &proto.CategoryId{CategoryUuid: int64(bookUuid)}
 
 		if response, err := client.ShowCategory(ctx, req); err == nil {
+			result := [3]string{
+				strconv.FormatInt(response.CategoryUuid, 10),
+				response.Name,
+				response.ParentName,
+			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Result),
+				"result": result,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -279,8 +294,12 @@ func main() {
 
 		req := &proto.UpdateAuthorRequest{AuthorUuid: authorUuid, AuthorName: name}
 		if response, err := client.UpdateAuthor(ctx, req); err == nil {
+			result := [2]string{
+				strconv.FormatInt(response.AuthorUuid, 10),
+				response.Name,
+			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Success),
+				"result": result,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -293,15 +312,17 @@ func main() {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param author_uuid"})
 		}
 		name := ctx.PostForm("name")
-		parentId, err := strconv.ParseUint(ctx.PostForm("parent_id"), 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param parent_id"})
-		}
+		parentId := ctx.PostForm("parent_uuid")
 
-		req := &proto.UpdateCategoryRequest{CategoryUuid: categoryUuid, CategoryName: name, ParentUuid: int64(parentId)}
+		req := &proto.UpdateCategoryRequest{CategoryUuid: categoryUuid, CategoryName: name, ParentUuid: parentId}
 		if response, err := client.UpdateCategory(ctx, req); err == nil {
+			result := [3]string{
+				strconv.FormatInt(response.CategoryUuid, 10),
+				response.Name,
+				response.ParentName,
+			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Success),
+				"result": result,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

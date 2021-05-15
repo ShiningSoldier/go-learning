@@ -20,17 +20,17 @@ const _ = grpc.SupportPackageIsVersion7
 type BooksServiceClient interface {
 	AddBook(ctx context.Context, in *AddBookRequest, opts ...grpc.CallOption) (*Book, error)
 	UpdateBook(ctx context.Context, in *UpdateBookRequest, opts ...grpc.CallOption) (*Book, error)
+	UpdateAuthor(ctx context.Context, in *UpdateAuthorRequest, opts ...grpc.CallOption) (*Author, error)
+	UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*Category, error)
 	DeleteBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*Response, error)
-	ShowBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*BookData, error)
+	ShowBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*Book, error)
+	ShowAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*Author, error)
+	ShowCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*Category, error)
 	FilterByAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*BookData, error)
 	FilterByCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*BookData, error)
 	Paginate(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (*BookData, error)
 	AddAuthor(ctx context.Context, in *AddAuthorRequest, opts ...grpc.CallOption) (*Author, error)
 	AddCategory(ctx context.Context, in *AddCategoryRequest, opts ...grpc.CallOption) (*Category, error)
-	ShowAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*AuthorData, error)
-	UpdateAuthor(ctx context.Context, in *UpdateAuthorRequest, opts ...grpc.CallOption) (*Response, error)
-	UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*Response, error)
-	ShowCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*CategoryData, error)
 	DeleteCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*Response, error)
 	DeleteAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*Response, error)
 }
@@ -61,6 +61,24 @@ func (c *booksServiceClient) UpdateBook(ctx context.Context, in *UpdateBookReque
 	return out, nil
 }
 
+func (c *booksServiceClient) UpdateAuthor(ctx context.Context, in *UpdateAuthorRequest, opts ...grpc.CallOption) (*Author, error) {
+	out := new(Author)
+	err := c.cc.Invoke(ctx, "/proto.BooksService/UpdateAuthor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *booksServiceClient) UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*Category, error) {
+	out := new(Category)
+	err := c.cc.Invoke(ctx, "/proto.BooksService/UpdateCategory", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *booksServiceClient) DeleteBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
 	err := c.cc.Invoke(ctx, "/proto.BooksService/DeleteBook", in, out, opts...)
@@ -70,9 +88,27 @@ func (c *booksServiceClient) DeleteBook(ctx context.Context, in *BookId, opts ..
 	return out, nil
 }
 
-func (c *booksServiceClient) ShowBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*BookData, error) {
-	out := new(BookData)
+func (c *booksServiceClient) ShowBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*Book, error) {
+	out := new(Book)
 	err := c.cc.Invoke(ctx, "/proto.BooksService/ShowBook", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *booksServiceClient) ShowAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*Author, error) {
+	out := new(Author)
+	err := c.cc.Invoke(ctx, "/proto.BooksService/ShowAuthor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *booksServiceClient) ShowCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*Category, error) {
+	out := new(Category)
+	err := c.cc.Invoke(ctx, "/proto.BooksService/ShowCategory", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -124,42 +160,6 @@ func (c *booksServiceClient) AddCategory(ctx context.Context, in *AddCategoryReq
 	return out, nil
 }
 
-func (c *booksServiceClient) ShowAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*AuthorData, error) {
-	out := new(AuthorData)
-	err := c.cc.Invoke(ctx, "/proto.BooksService/ShowAuthor", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *booksServiceClient) UpdateAuthor(ctx context.Context, in *UpdateAuthorRequest, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/proto.BooksService/UpdateAuthor", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *booksServiceClient) UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/proto.BooksService/UpdateCategory", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *booksServiceClient) ShowCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*CategoryData, error) {
-	out := new(CategoryData)
-	err := c.cc.Invoke(ctx, "/proto.BooksService/ShowCategory", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *booksServiceClient) DeleteCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
 	err := c.cc.Invoke(ctx, "/proto.BooksService/DeleteCategory", in, out, opts...)
@@ -184,17 +184,17 @@ func (c *booksServiceClient) DeleteAuthor(ctx context.Context, in *AuthorId, opt
 type BooksServiceServer interface {
 	AddBook(context.Context, *AddBookRequest) (*Book, error)
 	UpdateBook(context.Context, *UpdateBookRequest) (*Book, error)
+	UpdateAuthor(context.Context, *UpdateAuthorRequest) (*Author, error)
+	UpdateCategory(context.Context, *UpdateCategoryRequest) (*Category, error)
 	DeleteBook(context.Context, *BookId) (*Response, error)
-	ShowBook(context.Context, *BookId) (*BookData, error)
+	ShowBook(context.Context, *BookId) (*Book, error)
+	ShowAuthor(context.Context, *AuthorId) (*Author, error)
+	ShowCategory(context.Context, *CategoryId) (*Category, error)
 	FilterByAuthor(context.Context, *AuthorId) (*BookData, error)
 	FilterByCategory(context.Context, *CategoryId) (*BookData, error)
 	Paginate(context.Context, *PageNumber) (*BookData, error)
 	AddAuthor(context.Context, *AddAuthorRequest) (*Author, error)
 	AddCategory(context.Context, *AddCategoryRequest) (*Category, error)
-	ShowAuthor(context.Context, *AuthorId) (*AuthorData, error)
-	UpdateAuthor(context.Context, *UpdateAuthorRequest) (*Response, error)
-	UpdateCategory(context.Context, *UpdateCategoryRequest) (*Response, error)
-	ShowCategory(context.Context, *CategoryId) (*CategoryData, error)
 	DeleteCategory(context.Context, *CategoryId) (*Response, error)
 	DeleteAuthor(context.Context, *AuthorId) (*Response, error)
 	mustEmbedUnimplementedBooksServiceServer()
@@ -210,11 +210,23 @@ func (UnimplementedBooksServiceServer) AddBook(context.Context, *AddBookRequest)
 func (UnimplementedBooksServiceServer) UpdateBook(context.Context, *UpdateBookRequest) (*Book, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBook not implemented")
 }
+func (UnimplementedBooksServiceServer) UpdateAuthor(context.Context, *UpdateAuthorRequest) (*Author, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAuthor not implemented")
+}
+func (UnimplementedBooksServiceServer) UpdateCategory(context.Context, *UpdateCategoryRequest) (*Category, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCategory not implemented")
+}
 func (UnimplementedBooksServiceServer) DeleteBook(context.Context, *BookId) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteBook not implemented")
 }
-func (UnimplementedBooksServiceServer) ShowBook(context.Context, *BookId) (*BookData, error) {
+func (UnimplementedBooksServiceServer) ShowBook(context.Context, *BookId) (*Book, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShowBook not implemented")
+}
+func (UnimplementedBooksServiceServer) ShowAuthor(context.Context, *AuthorId) (*Author, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShowAuthor not implemented")
+}
+func (UnimplementedBooksServiceServer) ShowCategory(context.Context, *CategoryId) (*Category, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShowCategory not implemented")
 }
 func (UnimplementedBooksServiceServer) FilterByAuthor(context.Context, *AuthorId) (*BookData, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FilterByAuthor not implemented")
@@ -230,18 +242,6 @@ func (UnimplementedBooksServiceServer) AddAuthor(context.Context, *AddAuthorRequ
 }
 func (UnimplementedBooksServiceServer) AddCategory(context.Context, *AddCategoryRequest) (*Category, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddCategory not implemented")
-}
-func (UnimplementedBooksServiceServer) ShowAuthor(context.Context, *AuthorId) (*AuthorData, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ShowAuthor not implemented")
-}
-func (UnimplementedBooksServiceServer) UpdateAuthor(context.Context, *UpdateAuthorRequest) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateAuthor not implemented")
-}
-func (UnimplementedBooksServiceServer) UpdateCategory(context.Context, *UpdateCategoryRequest) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateCategory not implemented")
-}
-func (UnimplementedBooksServiceServer) ShowCategory(context.Context, *CategoryId) (*CategoryData, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ShowCategory not implemented")
 }
 func (UnimplementedBooksServiceServer) DeleteCategory(context.Context, *CategoryId) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCategory not implemented")
@@ -298,6 +298,42 @@ func _BooksService_UpdateBook_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BooksService_UpdateAuthor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAuthorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BooksServiceServer).UpdateAuthor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BooksService/UpdateAuthor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BooksServiceServer).UpdateAuthor(ctx, req.(*UpdateAuthorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BooksService_UpdateCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCategoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BooksServiceServer).UpdateCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BooksService/UpdateCategory",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BooksServiceServer).UpdateCategory(ctx, req.(*UpdateCategoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _BooksService_DeleteBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BookId)
 	if err := dec(in); err != nil {
@@ -330,6 +366,42 @@ func _BooksService_ShowBook_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BooksServiceServer).ShowBook(ctx, req.(*BookId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BooksService_ShowAuthor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthorId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BooksServiceServer).ShowAuthor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BooksService/ShowAuthor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BooksServiceServer).ShowAuthor(ctx, req.(*AuthorId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BooksService_ShowCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CategoryId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BooksServiceServer).ShowCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BooksService/ShowCategory",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BooksServiceServer).ShowCategory(ctx, req.(*CategoryId))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -424,78 +496,6 @@ func _BooksService_AddCategory_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BooksService_ShowAuthor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthorId)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BooksServiceServer).ShowAuthor(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.BooksService/ShowAuthor",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BooksServiceServer).ShowAuthor(ctx, req.(*AuthorId))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BooksService_UpdateAuthor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateAuthorRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BooksServiceServer).UpdateAuthor(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.BooksService/UpdateAuthor",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BooksServiceServer).UpdateAuthor(ctx, req.(*UpdateAuthorRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BooksService_UpdateCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateCategoryRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BooksServiceServer).UpdateCategory(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.BooksService/UpdateCategory",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BooksServiceServer).UpdateCategory(ctx, req.(*UpdateCategoryRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BooksService_ShowCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CategoryId)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BooksServiceServer).ShowCategory(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.BooksService/ShowCategory",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BooksServiceServer).ShowCategory(ctx, req.(*CategoryId))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _BooksService_DeleteCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CategoryId)
 	if err := dec(in); err != nil {
@@ -548,12 +548,28 @@ var BooksService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _BooksService_UpdateBook_Handler,
 		},
 		{
+			MethodName: "UpdateAuthor",
+			Handler:    _BooksService_UpdateAuthor_Handler,
+		},
+		{
+			MethodName: "UpdateCategory",
+			Handler:    _BooksService_UpdateCategory_Handler,
+		},
+		{
 			MethodName: "DeleteBook",
 			Handler:    _BooksService_DeleteBook_Handler,
 		},
 		{
 			MethodName: "ShowBook",
 			Handler:    _BooksService_ShowBook_Handler,
+		},
+		{
+			MethodName: "ShowAuthor",
+			Handler:    _BooksService_ShowAuthor_Handler,
+		},
+		{
+			MethodName: "ShowCategory",
+			Handler:    _BooksService_ShowCategory_Handler,
 		},
 		{
 			MethodName: "FilterByAuthor",
@@ -574,22 +590,6 @@ var BooksService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddCategory",
 			Handler:    _BooksService_AddCategory_Handler,
-		},
-		{
-			MethodName: "ShowAuthor",
-			Handler:    _BooksService_ShowAuthor_Handler,
-		},
-		{
-			MethodName: "UpdateAuthor",
-			Handler:    _BooksService_UpdateAuthor_Handler,
-		},
-		{
-			MethodName: "UpdateCategory",
-			Handler:    _BooksService_UpdateCategory_Handler,
-		},
-		{
-			MethodName: "ShowCategory",
-			Handler:    _BooksService_ShowCategory_Handler,
 		},
 		{
 			MethodName: "DeleteCategory",

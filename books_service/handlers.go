@@ -230,38 +230,41 @@ func (s *server) DeleteBook(ctx context.Context, request *proto.BookId) (*proto.
 // @Accept  json
 // @Produce  json
 // @Param book_uuid path int true "Book uuid"
-// @Success 200 {object} bool
+// @Success 200 {object} main.Book
 // @Router /show/{book_uuid} [get]
-func (s *server) ShowBook(ctx context.Context, request *proto.BookId) (*proto.BookData, error) {
+func (s *server) ShowBook(ctx context.Context, request *proto.BookId) (*proto.Book, error) {
 	bookUuid := request.GetBookUuid()
 
-	result, err := getBookData(bookUuid)
+	bookName, authorName, categories, err := getBookData(bookUuid)
 
 	if err != nil {
-		return &proto.BookData{Result: ""}, err
+		return &proto.Book{}, err
 	}
 
-	return &proto.BookData{Result: result}, nil
+	return &proto.Book{
+		BookUuid:   bookUuid,
+		Name:       bookName,
+		Author:     authorName,
+		Categories: categories,
+	}, nil
 }
 
-func getBookData(bookUuid int64) (string, error) {
+func getBookData(bookUuid int64) (string, string, string, error) {
 	book := Book{}
 
-	selectBookQuery := `SELECT books.uuid, books.name,
-       authors.uuid "authors.uuid", authors.name "authors.name"
+	selectBookQuery := `SELECT books.name, authors.name "authors.name"
     FROM books
-    INNER JOIN authors ON authors.uuid = books.author_id
+    INNER JOIN authors ON authors.uuid = books.author_uuid
     WHERE books.deleted_at IS NULL AND books.uuid = ?`
 
 	err := db.Get(&book, selectBookQuery, bookUuid)
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 
 	categories := getCategories(bookUuid)
-	result := fmt.Sprintf("Book uuid: %d, Book name: %s, author name: %s, categories: %s", book.Uuid, book.Name, book.Author.Name, strings.TrimSpace(categories))
 
-	return result, nil
+	return book.Name, book.Author.Name, categories, nil
 }
 
 func getCategories(bookUuid int64) string {
@@ -296,6 +299,7 @@ func getCategories(bookUuid int64) string {
 // @Router /add-category [post]
 func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequest) (*proto.Category, error) {
 	name, parentUuid := request.GetName(), request.GetParentUuid()
+	parentCategory := Category{}
 	if len(parentUuid) == 0 {
 		parentUuid = "0"
 	}
@@ -305,7 +309,7 @@ func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequ
 	if err != nil {
 		return &proto.Category{
 			CategoryUuid: 0,
-			ParentUuid:   "",
+			ParentName:   "",
 			Name:         "",
 		}, err
 	}
@@ -313,14 +317,25 @@ func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequ
 	if err != nil {
 		return &proto.Category{
 			CategoryUuid: 0,
-			ParentUuid:   "",
+			ParentName:   "",
 			Name:         "",
 		}, err
 	}
 
+	if parentUuid != "0" {
+		err := db.Get(&parentCategory, `SELECT name FROM categories WHERE uuid = ?`, parentUuid)
+		if err != nil {
+			return &proto.Category{
+				CategoryUuid: 0,
+				ParentName:   "",
+				Name:         "",
+			}, err
+		}
+	}
+
 	return &proto.Category{
 		CategoryUuid: lastInsertedId,
-		ParentUuid:   parentUuid,
+		ParentName:   parentCategory.Name,
 		Name:         name,
 	}, nil
 }
@@ -367,16 +382,22 @@ func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest)
 // @Accept  json
 // @Produce  json
 // @Param author_uuid path int true "Author uuid"
-// @Success 200 {object} string
+// @Success 200 {object} main.Author
 // @Router /show-author/{author_uuid} [get]
-func (s *server) ShowAuthor(ctx context.Context, request *proto.AuthorId) (*proto.AuthorData, error) {
+func (s *server) ShowAuthor(ctx context.Context, request *proto.AuthorId) (*proto.Author, error) {
 	authorUuid := request.GetAuthorUuid()
 	author, err := getAuthor(authorUuid)
 	if err != nil {
-		return &proto.AuthorData{Result: ""}, err
+		return &proto.Author{
+			AuthorUuid: 0,
+			Name:       "",
+		}, err
 	}
 
-	return &proto.AuthorData{Result: fmt.Sprintf("Author name: %s", author.Name)}, nil
+	return &proto.Author{
+		AuthorUuid: authorUuid,
+		Name:       author.Name,
+	}, nil
 }
 
 func getAuthor(authorUuid int64) (Author, error) {
@@ -394,9 +415,9 @@ func getAuthor(authorUuid int64) (Author, error) {
 // @Accept  json
 // @Produce  json
 // @Param category_uuid path int true "Category uuid"
-// @Success 200 {object} string
+// @Success 200 {object} main.Category
 // @Router /show-category/{category_uuid} [get]
-func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*proto.CategoryData, error) {
+func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*proto.Category, error) {
 	categoryUuid := request.GetCategoryUuid()
 	category := Category{}
 
@@ -407,10 +428,18 @@ func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*
 
 	err := db.Get(&category, selectQuery, categoryUuid)
 	if err != nil {
-		return &proto.CategoryData{Result: ""}, err
+		return &proto.Category{
+			CategoryUuid: 0,
+			ParentName:   "",
+			Name:         "",
+		}, err
 	}
 
-	return &proto.CategoryData{Result: fmt.Sprintf("Category name: %s, parent category: %s", category.Name, category.Parent_name.String)}, nil
+	return &proto.Category{
+		CategoryUuid: categoryUuid,
+		ParentName:   category.Parent_name.String,
+		Name:         category.Name,
+	}, nil
 }
 
 // FilterByAuthor godoc
@@ -588,18 +617,24 @@ func deleteEntity(entity string, entityUuid int64) error {
 // @Produce  json
 // @Param author_uuid body int true "Author uuid"
 // @Param name body string true "Author name"
-// @Success 200 {object} bool
+// @Success 200 {object} main.Author
 // @Router /update-author [put]
-func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRequest) (*proto.Response, error) {
+func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRequest) (*proto.Author, error) {
 	authorUuid, name, currentTimestamp := request.GetAuthorUuid(), request.GetAuthorName(), time.Now().Format("2006-01-02 15:04:05")
 	updateQuery := `UPDATE authors SET name = ?, updated_at = ? WHERE uuid = ?`
 
 	_, err := db.Exec(updateQuery, name, currentTimestamp, authorUuid)
 	if err != nil {
-		return &proto.Response{Success: false}, err
+		return &proto.Author{
+			AuthorUuid: 0,
+			Name:       "",
+		}, err
 	}
 
-	return &proto.Response{Success: true}, nil
+	return &proto.Author{
+		AuthorUuid: authorUuid,
+		Name:       name,
+	}, nil
 }
 
 // UpdateCategory godoc
@@ -610,31 +645,52 @@ func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRe
 // @Produce  json
 // @Param category_uuid body int true "Category uuid"
 // @Param name path string true "Category name"
-// @Param parent_uuid path int true "Parent id"
-// @Success 200 {object} bool
+// @Param parent_uuid path string false "Parent id"
+// @Success 200 {object} main.Category
 // @Router /update-category [put]
-func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCategoryRequest) (*proto.Response, error) {
+func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCategoryRequest) (*proto.Category, error) {
 	categoryId, name, parentUuid, currentTimestamp := request.GetCategoryUuid(), request.GetCategoryName(), request.GetParentUuid(), time.Now().Format("2006-01-02 15:04:05")
+	parentCategory := Category{}
 	updateQuery := `UPDATE categories SET name = ?, parent_uuid = ?, updated_at = ? WHERE uuid = ?`
 
 	_, err := db.Exec(updateQuery, name, parentUuid, currentTimestamp, categoryId)
 	if err != nil {
-		return &proto.Response{Success: false}, err
+		return &proto.Category{}, err
+	}
+	if parentUuid != "0" {
+		err := db.Get(&parentCategory, `SELECT name FROM categories WHERE uuid = ?`, parentUuid)
+		if err != nil {
+			return &proto.Category{}, err
+		}
 	}
 
-	return &proto.Response{Success: true}, nil
+	return &proto.Category{
+		CategoryUuid: categoryId,
+		ParentName:   parentCategory.Name,
+		Name:         name,
+	}, nil
 }
 
-func (s *server) GetBookData(ctx context.Context, request *proto.BookId) (*proto.BookData, error) {
+func (s *server) GetBookData(ctx context.Context, request *proto.BookId) (*proto.Book, error) {
 	bookUuid := request.GetBookUuid()
 
-	result, err := getBookData(bookUuid)
+	bookName, authorName, categories, err := getBookData(bookUuid)
 
 	if err != nil {
-		return &proto.BookData{Result: ""}, err
+		return &proto.Book{
+			BookUuid:   0,
+			Name:       "",
+			Author:     "",
+			Categories: "",
+		}, err
 	}
 
-	return &proto.BookData{Result: result}, nil
+	return &proto.Book{
+		BookUuid:   bookUuid,
+		Name:       bookName,
+		Author:     authorName,
+		Categories: categories,
+	}, nil
 }
 
 func handleDatabase() {
