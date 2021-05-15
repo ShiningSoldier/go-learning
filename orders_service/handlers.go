@@ -21,7 +21,6 @@ type Order struct {
 	Uuid        int64  `json:"uuid"`
 	Book_uuid   int64  `json:"book_uuid"`
 	Description string `json:"description"`
-	Created_at  string `json:"created_at"`
 }
 
 func main() {
@@ -53,20 +52,27 @@ func main() {
 // @Produce  json
 // @Param book_uuid body int true "Book uuid"
 // @Param description body string true "Author name"
-// @Success 200 {object} bool
+// @Success 200 {object} main.Order
 // @Router /create-order [post]
-func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequest) (*proto.Response, error) {
+func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequest) (*proto.Order, error) {
 	bookUuid, description := request.GetBookUuid(), request.GetDescription()
-
 	insertQuery := `INSERT INTO orders(book_uuid, description) VALUES(?,?)`
 
-	_, err := db.Exec(insertQuery, bookUuid, description)
-
+	row, err := db.Exec(insertQuery, bookUuid, description)
 	if err != nil {
-		return &proto.Response{Success: false}, err
+		return &proto.Order{}, err
 	}
 
-	return &proto.Response{Success: true}, nil
+	lastInsertedId, err := row.LastInsertId()
+	if err != nil {
+		return &proto.Order{}, err
+	}
+
+	return &proto.Order{
+		OrderUuid:   lastInsertedId,
+		BookUuid:    bookUuid,
+		Description: description,
+	}, nil
 }
 
 // GetOrderData godoc
@@ -76,30 +82,24 @@ func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequ
 // @Accept  json
 // @Produce  json
 // @Param order_uuid path int true "Order uuid"
-// @Success 200 {object} object
+// @Success 200 {object} main.Order
 // @Router /show/{order_uuid} [get]
-func (s *server) GetOrderData(ctx context.Context, request *proto.OrderId) (*proto.OrderData, error) {
+func (s *server) GetOrderData(ctx context.Context, request *proto.OrderId) (*proto.Order, error) {
 	orderUuid := request.GetOrderUuid()
 	order := Order{}
 
-	selectQuery := `SELECT uuid, book_uuid, description, created_at FROM orders WHERE uuid = ?`
+	selectQuery := `SELECT uuid, book_uuid, description FROM orders WHERE uuid = ?`
 
 	err := db.Get(&order, selectQuery, orderUuid)
 
 	if err != nil {
-		return &proto.OrderData{
-			OrderUuid:   0,
-			BookUuid:    0,
-			Description: "",
-			CreatedAt:   "",
-		}, err
+		return &proto.Order{}, err
 	}
 
-	return &proto.OrderData{
+	return &proto.Order{
 		OrderUuid:   order.Uuid,
 		BookUuid:    order.Book_uuid,
 		Description: order.Description,
-		CreatedAt:   order.Created_at,
 	}, nil
 }
 

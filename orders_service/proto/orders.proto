@@ -12,35 +12,29 @@ message OrderId {
   int64 order_uuid = 1;
 }
 
-message OrderData {
+message Order {
   int64 order_uuid = 1;
   int64 book_uuid = 2;
   string description = 3;
   string created_at = 4;
 }
 
-message BookData {
-  string result = 1;
+message Book {
+  int64 book_uuid = 1;
+  string name = 2;
+  string author = 3;
+  string categories = 4;
 }
 
 message BookId {
   int64 book_uuid = 1;
 }
 
-message Response {
-  bool success = 1;
-}
-
-message PageNumber {
-  int64 page_number = 1;
-}
-
 service OrdersService {
-  rpc CreateOrder(CreateOrderRequest) returns (Response);
-  rpc GetOrderData(OrderId) returns (OrderData);
-  rpc Paginate(PageNumber) returns (stream OrderData);
+  rpc CreateOrder(CreateOrderRequest) returns (Order);
+  rpc GetOrderData(OrderId) returns (Order);
 }
 
 service BooksService {
-  rpc ShowBook(BookId) returns (BookData);
+  rpc ShowBook(BookId) returns (Book);
 }
