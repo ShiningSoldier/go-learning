@@ -33,6 +33,8 @@ type BooksServiceClient interface {
 	FilterByAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*Books, error)
 	FilterByCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*Books, error)
 	Paginate(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (*Books, error)
+	PaginateAuthors(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (*Authors, error)
+	PaginateCategories(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (*Categories, error)
 }
 
 type booksServiceClient struct {
@@ -178,6 +180,24 @@ func (c *booksServiceClient) Paginate(ctx context.Context, in *PageNumber, opts 
 	return out, nil
 }
 
+func (c *booksServiceClient) PaginateAuthors(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (*Authors, error) {
+	out := new(Authors)
+	err := c.cc.Invoke(ctx, "/proto.BooksService/PaginateAuthors", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *booksServiceClient) PaginateCategories(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (*Categories, error) {
+	out := new(Categories)
+	err := c.cc.Invoke(ctx, "/proto.BooksService/PaginateCategories", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BooksServiceServer is the server API for BooksService service.
 // All implementations must embed UnimplementedBooksServiceServer
 // for forward compatibility
@@ -197,6 +217,8 @@ type BooksServiceServer interface {
 	FilterByAuthor(context.Context, *AuthorId) (*Books, error)
 	FilterByCategory(context.Context, *CategoryId) (*Books, error)
 	Paginate(context.Context, *PageNumber) (*Books, error)
+	PaginateAuthors(context.Context, *PageNumber) (*Authors, error)
+	PaginateCategories(context.Context, *PageNumber) (*Categories, error)
 	mustEmbedUnimplementedBooksServiceServer()
 }
 
@@ -248,6 +270,12 @@ func (UnimplementedBooksServiceServer) FilterByCategory(context.Context, *Catego
 }
 func (UnimplementedBooksServiceServer) Paginate(context.Context, *PageNumber) (*Books, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Paginate not implemented")
+}
+func (UnimplementedBooksServiceServer) PaginateAuthors(context.Context, *PageNumber) (*Authors, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PaginateAuthors not implemented")
+}
+func (UnimplementedBooksServiceServer) PaginateCategories(context.Context, *PageNumber) (*Categories, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PaginateCategories not implemented")
 }
 func (UnimplementedBooksServiceServer) mustEmbedUnimplementedBooksServiceServer() {}
 
@@ -532,6 +560,42 @@ func _BooksService_Paginate_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BooksService_PaginateAuthors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PageNumber)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BooksServiceServer).PaginateAuthors(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BooksService/PaginateAuthors",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BooksServiceServer).PaginateAuthors(ctx, req.(*PageNumber))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BooksService_PaginateCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PageNumber)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BooksServiceServer).PaginateCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BooksService/PaginateCategories",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BooksServiceServer).PaginateCategories(ctx, req.(*PageNumber))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BooksService_ServiceDesc is the grpc.ServiceDesc for BooksService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -598,6 +662,14 @@ var BooksService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Paginate",
 			Handler:    _BooksService_Paginate_Handler,
+		},
+		{
+			MethodName: "PaginateAuthors",
+			Handler:    _BooksService_PaginateAuthors_Handler,
+		},
+		{
+			MethodName: "PaginateCategories",
+			Handler:    _BooksService_PaginateCategories_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

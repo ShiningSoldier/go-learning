@@ -3,7 +3,6 @@ package main
 import (
 	_ "./docs"
 	proto "./proto"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -40,14 +39,11 @@ func main() {
 
 		req := &proto.AddBookRequest{BookName: name, CategoryId: string(categoryId), AuthorId: int64(authorId)}
 		if response, err := client.AddBook(ctx, req); err == nil {
-			result := [4]string{
-				strconv.FormatInt(response.BookUuid, 10),
-				response.Name,
-				response.Author,
-				response.Categories,
-			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": result,
+				"book_uuid":       strconv.FormatInt(response.BookUuid, 10),
+				"book_name":       response.Name,
+				"book_author":     response.Author,
+				"book_categories": response.Categories,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -60,13 +56,10 @@ func main() {
 
 		req := &proto.AddCategoryRequest{Name: name, ParentUuid: parentUuid}
 		if response, err := client.AddCategory(ctx, req); err == nil {
-			result := [3]string{
-				strconv.FormatInt(response.CategoryUuid, 10),
-				response.ParentName,
-				response.Name,
-			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": result,
+				"category_uuid":        strconv.FormatInt(response.CategoryUuid, 10),
+				"category_name":        response.Name,
+				"parent_category_name": response.ParentName,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -78,12 +71,9 @@ func main() {
 
 		req := &proto.AddAuthorRequest{Name: name}
 		if response, err := client.AddAuthor(ctx, req); err == nil {
-			result := [2]string{
-				strconv.FormatInt(response.AuthorUuid, 10),
-				response.Name,
-			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": result,
+				"author_uuid": strconv.FormatInt(response.AuthorUuid, 10),
+				"author_name": response.Name,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -104,13 +94,11 @@ func main() {
 
 		req := &proto.UpdateBookRequest{BookUuid: bookUuid, BookName: name, CategoryId: categoryId, AuthorId: int64(authorId)}
 		if response, err := client.UpdateBook(ctx, req); err == nil {
-			result := [3]string{
-				strconv.FormatInt(response.BookUuid, 10),
-				response.Author,
-				response.Categories,
-			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": result,
+				"book_uuid":       strconv.FormatInt(response.BookUuid, 10),
+				"book_name":       response.Name,
+				"book_author":     response.Author,
+				"book_categories": response.Categories,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -127,7 +115,7 @@ func main() {
 
 		if response, err := client.DeleteBook(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Success),
+				"result": response.Success,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -143,14 +131,11 @@ func main() {
 		req := &proto.BookId{BookUuid: int64(bookUuid)}
 
 		if response, err := client.ShowBook(ctx, req); err == nil {
-			result := [4]string{
-				strconv.FormatInt(response.BookUuid, 10),
-				response.Name,
-				response.Author,
-				response.Categories,
-			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": result,
+				"book_uuid":       strconv.FormatInt(response.BookUuid, 10),
+				"book_name":       response.Name,
+				"book_author":     response.Author,
+				"book_categories": response.Categories,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -166,12 +151,9 @@ func main() {
 		req := &proto.AuthorId{AuthorUuid: int64(authorUuid)}
 
 		if response, err := client.ShowAuthor(ctx, req); err == nil {
-			result := [2]string{
-				strconv.FormatInt(response.AuthorUuid, 10),
-				response.Name,
-			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": result,
+				"author_uuid": strconv.FormatInt(response.AuthorUuid, 10),
+				"author_name": response.Name,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -187,13 +169,10 @@ func main() {
 		req := &proto.CategoryId{CategoryUuid: int64(bookUuid)}
 
 		if response, err := client.ShowCategory(ctx, req); err == nil {
-			result := [3]string{
-				strconv.FormatInt(response.CategoryUuid, 10),
-				response.Name,
-				response.ParentName,
-			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": result,
+				"category_uuid":        strconv.FormatInt(response.CategoryUuid, 10),
+				"category_name":        response.Name,
+				"parent_category_name": response.ParentName,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -227,7 +206,7 @@ func main() {
 
 		if response, err := client.FilterByCategory(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response),
+				"result": response,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -251,6 +230,40 @@ func main() {
 		}
 	})
 
+	g.GET("/paginate-authors/:page_number", func(ctx *gin.Context) {
+		pageNumber, err := strconv.ParseUint(ctx.Param("page_number"), 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param page_number"})
+		}
+
+		req := &proto.PageNumber{PageNumber: int64(pageNumber)}
+
+		if response, err := client.PaginateAuthors(ctx, req); err == nil {
+			ctx.JSON(http.StatusOK, gin.H{
+				"result": response,
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+
+	g.GET("/paginate-categories/:page_number", func(ctx *gin.Context) {
+		pageNumber, err := strconv.ParseUint(ctx.Param("page_number"), 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param page_number"})
+		}
+
+		req := &proto.PageNumber{PageNumber: int64(pageNumber)}
+
+		if response, err := client.PaginateCategories(ctx, req); err == nil {
+			ctx.JSON(http.StatusOK, gin.H{
+				"result": response,
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+
 	g.DELETE("/delete-author/:author_uuid", func(ctx *gin.Context) {
 		authorUuid, err := strconv.ParseUint(ctx.Param("author_uuid"), 10, 64)
 		if err != nil {
@@ -261,7 +274,7 @@ func main() {
 
 		if response, err := client.DeleteAuthor(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Success),
+				"result": response.Success,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -278,7 +291,7 @@ func main() {
 
 		if response, err := client.DeleteCategory(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(response.Success),
+				"result": response.Success,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -294,12 +307,9 @@ func main() {
 
 		req := &proto.UpdateAuthorRequest{AuthorUuid: authorUuid, AuthorName: name}
 		if response, err := client.UpdateAuthor(ctx, req); err == nil {
-			result := [2]string{
-				strconv.FormatInt(response.AuthorUuid, 10),
-				response.Name,
-			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": result,
+				"author_uuid": strconv.FormatInt(response.AuthorUuid, 10),
+				"author_name": response.Name,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -316,13 +326,10 @@ func main() {
 
 		req := &proto.UpdateCategoryRequest{CategoryUuid: categoryUuid, CategoryName: name, ParentUuid: parentId}
 		if response, err := client.UpdateCategory(ctx, req); err == nil {
-			result := [3]string{
-				strconv.FormatInt(response.CategoryUuid, 10),
-				response.Name,
-				response.ParentName,
-			}
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": result,
+				"category_uuid":        strconv.FormatInt(response.CategoryUuid, 10),
+				"category_name":        response.Name,
+				"parent_category_name": response.ParentName,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

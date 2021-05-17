@@ -51,9 +51,17 @@ message Books {
   repeated Book book = 1;
 }
 
+message Authors {
+  repeated Author author = 1;
+}
+
 message Author {
   int64 author_uuid = 1;
   string name = 2;
+}
+
+message Categories {
+  repeated Category category = 1;
 }
 
 message Category {
@@ -62,24 +70,12 @@ message Category {
   string name = 3;
 }
 
-message BookData {
-  string result = 1;
-}
-
 message AuthorId {
   int64 author_uuid = 1;
 }
 
-message AuthorData {
-  string result = 1;
-}
-
 message CategoryId {
   int64 category_uuid = 1;
-}
-
-message CategoryData {
-  string result = 1;
 }
 
 message PageNumber {
@@ -106,4 +102,6 @@ service BooksService {
   rpc FilterByAuthor(AuthorId) returns (Books);
   rpc FilterByCategory(CategoryId) returns (Books);
   rpc Paginate(PageNumber) returns (Books);
+  rpc PaginateAuthors(PageNumber) returns (Authors);
+  rpc PaginateCategories(PageNumber) returns (Categories);
 }

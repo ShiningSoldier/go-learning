@@ -38,6 +38,7 @@ type BooksCategories struct {
 }
 
 type Category struct {
+	Uuid        int            `json:"uuid"`
 	Name        string         `json:"name"`
 	Parent_uuid int            `json:"parent_uuid"`
 	Parent_name sql.NullString `json:"parent_name"`
@@ -503,6 +504,82 @@ func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*prot
 	return &proto.Books{Book: response}, nil
 }
 
+// PaginateAuthors godoc
+// @Summary Get authors
+// @Description shows authors by pages
+// @ID paginate-authors
+// @Accept  json
+// @Produce  json
+// @Param page_number path int true "Page number"
+// @Success 200 {object} string
+// @Router /paginate-authors/{page_number} [get]
+func (s *server) PaginateAuthors(ctx context.Context, request *proto.PageNumber) (*proto.Authors, error) {
+	pageNumber := request.GetPageNumber()
+	offset := (pageNumber - 1) * 10
+	authors := []Author{}
+	response := []*proto.Author{}
+
+	selectQuery := `SELECT uuid, name
+    FROM authors
+    WHERE deleted_at IS NULL LIMIT 10 OFFSET ?`
+
+	err := db.Select(&authors, selectQuery, offset)
+	if err != nil {
+		return &proto.Authors{}, err
+	}
+
+	for _, item := range authors {
+		uuid := int64(item.Uuid)
+		ri := &proto.Author{
+			AuthorUuid: uuid,
+			Name:       item.Name,
+		}
+
+		response = append(response, ri)
+	}
+
+	return &proto.Authors{Author: response}, nil
+}
+
+// PaginateCategories godoc
+// @Summary Get categories
+// @Description shows categories by pages
+// @ID paginate-categories
+// @Accept  json
+// @Produce  json
+// @Param page_number path int true "Page number"
+// @Success 200 {object} string
+// @Router /paginate-categories/{page_number} [get]
+func (s *server) PaginateCategories(ctx context.Context, request *proto.PageNumber) (*proto.Categories, error) {
+	pageNumber := request.GetPageNumber()
+	offset := (pageNumber - 1) * 10
+	categories := []Category{}
+	response := []*proto.Category{}
+
+	selectQuery := `SELECT c.name, c.parent_uuid, c2.name AS parent_name
+    FROM categories c
+    LEFT JOIN categories c2 ON c.parent_uuid = c2.uuid
+    WHERE c.deleted_at IS NULL LIMIT 10 OFFSET ?`
+
+	err := db.Select(&categories, selectQuery, offset)
+	if err != nil {
+		return &proto.Categories{}, err
+	}
+
+	for _, item := range categories {
+		uuid := int64(item.Uuid)
+		ri := &proto.Category{
+			CategoryUuid: uuid,
+			Name:         item.Name,
+			ParentName:   item.Parent_name.String,
+		}
+
+		response = append(response, ri)
+	}
+
+	return &proto.Categories{Category: response}, nil
+}
+
 // DeleteAuthor godoc
 // @Summary Deletes an author
 // @Description delete an author using the DELETE request
@@ -654,7 +731,7 @@ func (s *server) GetBookData(ctx context.Context, request *proto.BookId) (*proto
 func handleDatabase() {
 	authorsQuery := `CREATE TABLE IF NOT EXISTS authors (
         uuid INT PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(60) NOT NULL,
+        name VARCHAR(60) NOT NULL UNIQUE,
         created_at datetime default CURRENT_TIMESTAMP,
         updated_at datetime default CURRENT_TIMESTAMP,
         deleted_at datetime
@@ -664,7 +741,7 @@ func handleDatabase() {
 
 	booksQuery := `CREATE TABLE IF NOT EXISTS books (
         uuid INT PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(60) NOT NULL,
+        name VARCHAR(60) NOT NULL UNIQUE,
         author_uuid INT NOT NULL,
         created_at datetime default CURRENT_TIMESTAMP,
         updated_at datetime default CURRENT_TIMESTAMP,
@@ -676,7 +753,7 @@ func handleDatabase() {
 
 	categoriesQuery := `CREATE TABLE IF NOT EXISTS categories (
         uuid INT PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(60) NOT NULL,
+        name VARCHAR(60) NOT NULL UNIQUE,
         parent_uuid INT,
         created_at datetime default CURRENT_TIMESTAMP,
         updated_at datetime default CURRENT_TIMESTAMP,
