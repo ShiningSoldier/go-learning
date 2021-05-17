@@ -48,15 +48,12 @@ func main() {
 			bookReq := &proto.BookId{BookUuid: int64(bookUuid)}
 			bookResponse, err := client2.ShowBook(ctx, bookReq)
 			if err == nil {
-				result := [5]string{
-					strconv.FormatInt(orderResponse.OrderUuid, 10),
-					strconv.FormatInt(bookResponse.BookUuid, 10),
-					bookResponse.Name,
-					bookResponse.Author,
-					bookResponse.Categories,
-				}
 				ctx.JSON(http.StatusOK, gin.H{
-					"result": result,
+					"order_uuid":      strconv.FormatInt(orderResponse.OrderUuid, 10),
+					"book_uuid":       strconv.FormatInt(bookResponse.BookUuid, 10),
+					"book_name":       bookResponse.Name,
+					"book_author":     bookResponse.Author,
+					"book_categories": bookResponse.Categories,
 				})
 			} else {
 				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -75,14 +72,10 @@ func main() {
 		req := &proto.OrderId{OrderUuid: int64(orderUuid)}
 
 		if response, err := client.GetOrderData(ctx, req); err == nil {
-			result := [3]string{
-				strconv.FormatInt(response.OrderUuid, 10),
-				strconv.FormatInt(response.BookUuid, 10),
-				response.Description,
-			}
-
 			ctx.JSON(http.StatusOK, gin.H{
-				"result": result,
+				"order_uuid":  strconv.FormatInt(response.OrderUuid, 10),
+				"book_uuid":   strconv.FormatInt(response.BookUuid, 10),
+				"description": response.Description,
 			})
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
