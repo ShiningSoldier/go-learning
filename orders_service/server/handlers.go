@@ -1,7 +1,7 @@
 package main
 
 import (
-	proto "./proto"
+	proto "../proto"
 	"context"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -48,10 +48,10 @@ func main() {
 // @Summary Created an order
 // @Description allows to buy a book and return the information about it
 // @ID create-order
-// @Accept  json
+// @Consume application/x-www-form-urlencoded
 // @Produce  json
-// @Param book_uuid body int true "Book uuid"
-// @Param description body string true "Author name"
+// @Param book_uuid formData int true "Book uuid"
+// @Param description formData string true "Author name"
 // @Success 200 {object} main.Order
 // @Router /create-order [post]
 func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequest) (*proto.Order, error) {

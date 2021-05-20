@@ -1,4 +1,14 @@
 basePath: /
+definitions:
+  main.Order:
+    properties:
+      book_uuid:
+        type: integer
+      description:
+        type: string
+      uuid:
+        type: integer
+    type: object
 host: localhost:8081
 info:
   contact: {}
@@ -8,30 +18,26 @@ info:
 paths:
   /create-order:
     post:
-      consumes:
-      - application/json
       description: allows to buy a book and return the information about it
       operationId: create-order
       parameters:
       - description: Book uuid
-        in: body
+        in: formData
         name: book_uuid
         required: true
-        schema:
-          type: integer
+        type: integer
       - description: Author name
-        in: body
+        in: formData
         name: description
         required: true
-        schema:
-          type: string
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: boolean
+            $ref: '#/definitions/main.Order'
       summary: Created an order
   /show/{order_uuid}:
     get:
@@ -51,6 +57,6 @@ paths:
         "200":
           description: OK
           schema:
-            type: object
+            $ref: '#/definitions/main.Order'
       summary: Get the specific order data
 swagger: "2.0"

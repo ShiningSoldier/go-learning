@@ -26,9 +26,6 @@ var doc = `{
         "/create-order": {
             "post": {
                 "description": "allows to buy a book and return the information about it",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -36,29 +33,25 @@ var doc = `{
                 "operationId": "create-order",
                 "parameters": [
                     {
+                        "type": "integer",
                         "description": "Book uuid",
                         "name": "book_uuid",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
+                        "in": "formData",
+                        "required": true
                     },
                     {
+                        "type": "string",
                         "description": "Author name",
                         "name": "description",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "boolean"
+                            "$ref": "#/definitions/main.Order"
                         }
                     }
                 }
@@ -88,9 +81,25 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/main.Order"
                         }
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "main.Order": {
+            "type": "object",
+            "properties": {
+                "book_uuid": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "integer"
                 }
             }
         }

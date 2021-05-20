@@ -1,7 +1,7 @@
 package main
 
 import (
-	proto "./proto"
+	proto "../proto"
 	"context"
 	"database/sql"
 	"fmt"
@@ -73,9 +73,9 @@ func main() {
 // @ID add-book
 // @Accept  json
 // @Produce  json
-// @Param name body string true "Book name"
-// @Param category_uuid body string true "List of category iIDs"
-// @Param author_uuid body int true "Book author ID"
+// @Param name formData string true "Book name"
+// @Param category_uuid formData string true "List of category iIDs"
+// @Param author_uuid formData int true "Book author ID"
 // @Success 200 {object} main.Book
 // @Router /add [post]
 func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*proto.Book, error) {
@@ -102,7 +102,10 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 		return &proto.Book{}, err
 	}
 
-	categories := getCategories(lastInsertedId)
+	categories, err := getCategories(lastInsertedId)
+	if err != nil {
+		return &proto.Book{}, err
+	}
 
 	return &proto.Book{
 		BookUuid:   lastInsertedId,
@@ -118,10 +121,10 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 // @ID update-book
 // @Accept  json
 // @Produce  json
-// @Param book_uuid body int true "Book uuid"
-// @Param name body string true "Book name"
-// @Param category_uuid body string true "List of category iIDs"
-// @Param author_uuid body int true "Book author ID"
+// @Param book_uuid formData int true "Book uuid"
+// @Param name formData string false "Book name"
+// @Param category_uuid formData string false "List of category iIDs"
+// @Param author_uuid formData int false "Book author ID"
 // @Success 200 {object} main.Book
 // @Router /update [patch]
 func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookRequest) (*proto.Book, error) {
@@ -178,8 +181,8 @@ func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookReques
 // @ID update-author
 // @Accept  json
 // @Produce  json
-// @Param author_uuid body int true "Author uuid"
-// @Param name body string true "Author name"
+// @Param author_uuid formData int true "Author uuid"
+// @Param name formData string false "Author name"
 // @Success 200 {object} main.Author
 // @Router /update-author [patch]
 func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRequest) (*proto.Author, error) {
@@ -210,9 +213,9 @@ func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRe
 // @ID update-category
 // @Accept  json
 // @Produce  json
-// @Param category_uuid body int true "Category uuid"
-// @Param name path string true "Category name"
-// @Param parent_uuid path string false "Parent id"
+// @Param category_uuid formData int true "Category uuid"
+// @Param name formData string false "Category name"
+// @Param parent_uuid formData string false "Parent id"
 // @Success 200 {object} main.Category
 // @Router /update-category [patch]
 func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCategoryRequest) (*proto.Category, error) {
@@ -339,12 +342,15 @@ func getBookData(bookUuid int64) (string, string, string, error) {
 		return "", "", "", err
 	}
 
-	categories := getCategories(bookUuid)
+	categories, err := getCategories(bookUuid)
+	if err != nil {
+		return "", "", "", err
+	}
 
 	return book.Name, book.Author.Name, categories, nil
 }
 
-func getCategories(bookUuid int64) string {
+func getCategories(bookUuid int64) (string, error) {
 	booksCategories := []BooksCategories{}
 
 	selectBooksCategoriesQuery := `SELECT category_uuid, categories.name "categories.name",
@@ -353,7 +359,10 @@ func getCategories(bookUuid int64) string {
     INNER JOIN categories ON categories.uuid = books_categories.category_uuid
     WHERE book_uuid = ?`
 	err = db.Select(&booksCategories, selectBooksCategoriesQuery, bookUuid)
-	checkErr(err)
+	if err != nil {
+		return "", err
+
+	}
 
 	categories := ""
 
@@ -361,7 +370,7 @@ func getCategories(bookUuid int64) string {
 		categories = categories + item.Category.Name + "; "
 	}
 
-	return strings.TrimSpace(categories)
+	return strings.TrimSpace(categories), nil
 }
 
 // AddCategory godoc
@@ -370,8 +379,8 @@ func getCategories(bookUuid int64) string {
 // @ID create-category
 // @Accept  json
 // @Produce  json
-// @Param name body string true "Category name"
-// @Param parent_uuid body string false "Parent id"
+// @Param name formData string true "Category name"
+// @Param parent_uuid formData string false "Parent id"
 // @Success 200 {object} main.Category
 // @Router /add-category [post]
 func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequest) (*proto.Category, error) {
@@ -411,7 +420,7 @@ func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequ
 // @ID create-author
 // @Accept  json
 // @Produce  json
-// @Param name body string true "Author name"
+// @Param name formData string true "Author name"
 // @Success 200 {object} main.Author
 // @Router /add-author [post]
 func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest) (*proto.Author, error) {
@@ -520,7 +529,10 @@ func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*
 
 	for _, item := range books {
 		uuid := int64(item.Uuid)
-		categories := getCategories(uuid)
+		categories, err := getCategories(uuid)
+		if err != nil {
+			return &proto.Books{}, err
+		}
 		ri := &proto.Book{
 			BookUuid:   uuid,
 			Name:       item.Name,
@@ -560,7 +572,10 @@ func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId
 
 	for _, item := range books {
 		uuid := int64(item.Uuid)
-		categories := getCategories(uuid)
+		categories, err := getCategories(uuid)
+		if err != nil {
+			return &proto.Books{}, err
+		}
 		ri := &proto.Book{
 			BookUuid:   uuid,
 			Name:       item.Name,
@@ -601,7 +616,10 @@ func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*prot
 
 	for _, item := range books {
 		uuid := int64(item.Uuid)
-		categories := getCategories(uuid)
+		categories, err := getCategories(uuid)
+		if err != nil {
+			return &proto.Books{}, err
+		}
 		ri := &proto.Book{
 			BookUuid:   uuid,
 			Name:       item.Name,
@@ -755,6 +773,12 @@ func (s *server) DeleteCategory(ctx context.Context, request *proto.CategoryId) 
 		return &proto.Response{Success: false}, err
 	}
 
+	deleteQuery := `DELETE FROM books_categories WHERE category_uuid = ?`
+	_, err = db.Exec(deleteQuery, categoryUuid)
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
+
 	return &proto.Response{Success: true}, nil
 }
 
@@ -766,28 +790,6 @@ func deleteEntity(entity string, entityUuid int64) error {
 	_, err := db.Exec(deleteQuery, currentTimestamp, currentTimestamp, entityUuid)
 
 	return err
-}
-
-func (s *server) GetBookData(ctx context.Context, request *proto.BookId) (*proto.Book, error) {
-	bookUuid := request.GetBookUuid()
-
-	bookName, authorName, categories, err := getBookData(bookUuid)
-
-	if err != nil {
-		return &proto.Book{
-			BookUuid:   0,
-			Name:       "",
-			Author:     "",
-			Categories: "",
-		}, err
-	}
-
-	return &proto.Book{
-		BookUuid:   bookUuid,
-		Name:       bookName,
-		Author:     authorName,
-		Categories: categories,
-	}, nil
 }
 
 func handleDatabase() {
@@ -832,10 +834,4 @@ func handleDatabase() {
     )`
 
 	db.MustExec(booksCategoriesQuery)
-}
-
-func checkErr(err error) {
-	if err != nil {
-		log.Printf(err.Error())
-	}
 }
