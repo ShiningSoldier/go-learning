@@ -80,19 +80,16 @@ func main() {
 		}
 	})
 
-	g.PUT("/update", func(ctx *gin.Context) {
+	g.PATCH("/update", func(ctx *gin.Context) {
 		bookUuid, err := strconv.ParseInt(ctx.PostForm("book_uuid"), 10, 64)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param book_uuid"})
 		}
 		name := ctx.PostForm("name")
 		categoryId := ctx.PostForm("category_uuid")
-		authorId, err := strconv.ParseUint(ctx.PostForm("author_uuid"), 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param author_id"})
-		}
+		authorId := ctx.PostForm("author_uuid")
 
-		req := &proto.UpdateBookRequest{BookUuid: bookUuid, BookName: name, CategoryId: categoryId, AuthorId: int64(authorId)}
+		req := &proto.UpdateBookRequest{BookUuid: bookUuid, BookName: name, CategoryId: categoryId, AuthorId: authorId}
 		if response, err := client.UpdateBook(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{
 				"book_uuid":       strconv.FormatInt(response.BookUuid, 10),
@@ -298,7 +295,7 @@ func main() {
 		}
 	})
 
-	g.PUT("/update-author", func(ctx *gin.Context) {
+	g.PATCH("/update-author", func(ctx *gin.Context) {
 		authorUuid, err := strconv.ParseInt(ctx.PostForm("author_uuid"), 10, 64)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param author_uuid"})
@@ -316,7 +313,7 @@ func main() {
 		}
 	})
 
-	g.PUT("/update-category", func(ctx *gin.Context) {
+	g.PATCH("/update-category", func(ctx *gin.Context) {
 		categoryUuid, err := strconv.ParseInt(ctx.PostForm("category_uuid"), 10, 64)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param author_uuid"})

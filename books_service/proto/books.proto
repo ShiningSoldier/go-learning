@@ -22,7 +22,7 @@ message UpdateBookRequest {
   int64 book_uuid = 1;
   string book_name = 2;
   string category_id = 3;
-  int64 author_id = 4;
+  string author_id = 4;
 }
 
 message UpdateAuthorRequest {

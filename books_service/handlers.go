@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	sq "github.com/Masterminds/squirrel"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"google.golang.org/grpc"
@@ -22,9 +23,10 @@ type server struct {
 }
 
 type Book struct {
-	Uuid   int    `json:"uuid"`
-	Name   string `json:"name"`
-	Author `db:"authors"`
+	Uuid        int    `json:"uuid"`
+	Name        string `json:"name"`
+	Author_uuid int    `json:"author_uuid"`
+	Author      `db:"authors"`
 }
 
 type Author struct {
@@ -112,7 +114,7 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 
 // UpdateBook godoc
 // @Summary Updates a book
-// @Description update a book using the PUT request
+// @Description update a book using the PATCH request
 // @ID update-book
 // @Accept  json
 // @Produce  json
@@ -121,34 +123,138 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 // @Param category_uuid body string true "List of category iIDs"
 // @Param author_uuid body int true "Book author ID"
 // @Success 200 {object} main.Book
-// @Router /update [put]
+// @Router /update [patch]
 func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookRequest) (*proto.Book, error) {
 	bookUuid, name, category, author, currentTimestamp := request.GetBookUuid(), request.GetBookName(), request.GetCategoryId(), request.GetAuthorId(), time.Now().Format("2006-01-02 15:04:05")
-	categoriesSlice := strings.Split(category, ",")
-	updateQuery := `UPDATE books SET name = ?, author_uuid = ?, updated_at = ? WHERE uuid = ?`
 
-	_, err := db.Exec(updateQuery, name, author, currentTimestamp, bookUuid)
+	if len(name) > 0 || len(author) > 0 || len(category) > 0 {
+		updateQuery := sq.Update("books").Where(sq.Eq{"uuid": bookUuid})
+
+		if len(name) > 0 {
+			updateQuery = updateQuery.Set("name", name)
+		}
+
+		if len(author) > 0 {
+			updateQuery = updateQuery.Set("author_uuid", author)
+		}
+
+		if len(category) > 0 {
+			categoriesSlice := strings.Split(category, ",")
+			err = addCategories(bookUuid, categoriesSlice)
+			if err != nil {
+				return &proto.Book{}, err
+			}
+		}
+
+		updateQuery = updateQuery.Set("updated_at", currentTimestamp)
+
+		query, args, err := updateQuery.ToSql()
+		if err != nil {
+			return &proto.Book{}, err
+		}
+
+		_, err = db.Exec(query, args...)
+		if err != nil {
+			return &proto.Book{}, err
+		}
+	}
+
+	bookName, authorName, categories, err := getBookData(bookUuid)
 	if err != nil {
 		return &proto.Book{}, err
 	}
-
-	err = addCategories(bookUuid, categoriesSlice)
-	if err != nil {
-		return &proto.Book{}, err
-	}
-
-	authorData, err := getAuthor(author)
-	if err != nil {
-		return &proto.Book{}, err
-	}
-
-	categories := getCategories(bookUuid)
 
 	return &proto.Book{
 		BookUuid:   bookUuid,
-		Name:       name,
-		Author:     authorData.Name,
+		Name:       bookName,
+		Author:     authorName,
 		Categories: categories,
+	}, nil
+}
+
+// UpdateAuthor godoc
+// @Summary Updates an author
+// @Description update an author using the PATCH request
+// @ID update-author
+// @Accept  json
+// @Produce  json
+// @Param author_uuid body int true "Author uuid"
+// @Param name body string true "Author name"
+// @Success 200 {object} main.Author
+// @Router /update-author [patch]
+func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRequest) (*proto.Author, error) {
+	authorUuid, name, currentTimestamp := request.GetAuthorUuid(), request.GetAuthorName(), time.Now().Format("2006-01-02 15:04:05")
+
+	if len(name) > 0 {
+		updateQuery := sq.Update("authors").Set("name", name).Set("updated_at", currentTimestamp).Where(sq.Eq{"uuid": authorUuid})
+		query, args, err := updateQuery.ToSql()
+		if err != nil {
+			return &proto.Author{}, err
+		}
+
+		_, err = db.Exec(query, args...)
+		if err != nil {
+			return &proto.Author{}, err
+		}
+	}
+
+	return &proto.Author{
+		AuthorUuid: authorUuid,
+		Name:       name,
+	}, nil
+}
+
+// UpdateCategory godoc
+// @Summary Updates a category
+// @Description update a category using the PUT request
+// @ID update-category
+// @Accept  json
+// @Produce  json
+// @Param category_uuid body int true "Category uuid"
+// @Param name path string true "Category name"
+// @Param parent_uuid path string false "Parent id"
+// @Success 200 {object} main.Category
+// @Router /update-category [patch]
+func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCategoryRequest) (*proto.Category, error) {
+	categoryUuid, name, parentUuid, currentTimestamp := request.GetCategoryUuid(), request.GetCategoryName(), request.GetParentUuid(), time.Now().Format("2006-01-02 15:04:05")
+
+	if len(name) > 0 || len(parentUuid) > 0 {
+		updateQuery := sq.Update("categories").Where(sq.Eq{"uuid": categoryUuid})
+		if len(name) > 0 {
+			updateQuery = updateQuery.Set("name", name)
+		}
+
+		if len(parentUuid) > 0 {
+			updateQuery = updateQuery.Set("parent_uuid", parentUuid)
+		}
+
+		updateQuery = updateQuery.Set("updated_at", currentTimestamp)
+
+		query, args, err := updateQuery.ToSql()
+		if err != nil {
+			return &proto.Category{}, err
+		}
+
+		_, err = db.Exec(query, args...)
+		if err != nil {
+			return &proto.Category{}, err
+		}
+	}
+
+	category := Category{}
+	selectQuery := `SELECT c.name, c.parent_uuid, c2.name AS parent_name
+    FROM categories c
+    LEFT JOIN categories c2 ON c.parent_uuid = c2.uuid
+    WHERE c.deleted_at IS NULL AND c.uuid = ?`
+	err := db.Get(&category, selectQuery, categoryUuid)
+	if err != nil {
+		return &proto.Category{}, err
+	}
+
+	return &proto.Category{
+		CategoryUuid: categoryUuid,
+		ParentName:   category.Parent_name.String,
+		Name:         name,
 	}, nil
 }
 
@@ -182,6 +288,11 @@ func (s *server) DeleteBook(ctx context.Context, request *proto.BookId) (*proto.
 
 	err := deleteEntity("books", bookUuid)
 
+	if err != nil {
+		return &proto.Response{Success: false}, err
+	}
+
+	err = deleteBookCategoriesLinking(bookUuid)
 	if err != nil {
 		return &proto.Response{Success: false}, err
 	}
@@ -478,7 +589,7 @@ func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*prot
 	books := []Book{}
 	response := []*proto.Book{}
 
-	selectQuery := `SELECT books.uuid, books.name, authors.name
+	selectQuery := `SELECT books.uuid, books.name, authors.name "authors.name"
     FROM books
 	INNER JOIN authors ON authors.uuid = books.author_uuid
     WHERE books.deleted_at IS NULL LIMIT 10 OFFSET ?`
@@ -604,13 +715,26 @@ func (s *server) DeleteAuthor(ctx context.Context, request *proto.AuthorId) (*pr
 	}
 
 	for _, item := range books {
-		err := deleteEntity("books", int64(item.Uuid))
+		bookUuid := int64(item.Uuid)
+		err := deleteEntity("books", bookUuid)
+		if err != nil {
+			return &proto.Response{Success: false}, err
+		}
+
+		err = deleteBookCategoriesLinking(bookUuid)
 		if err != nil {
 			return &proto.Response{Success: false}, err
 		}
 	}
 
 	return &proto.Response{Success: true}, nil
+}
+
+func deleteBookCategoriesLinking(bookUuid int64) error {
+	deleteQuery := `DELETE FROM books_categories WHERE book_uuid = ?`
+	_, err = db.Exec(deleteQuery, bookUuid)
+
+	return err
 }
 
 // DeleteCategory godoc
@@ -644,68 +768,6 @@ func deleteEntity(entity string, entityUuid int64) error {
 	return err
 }
 
-// UpdateAuthor godoc
-// @Summary Updates an author
-// @Description update an author using the PUT request
-// @ID update-author
-// @Accept  json
-// @Produce  json
-// @Param author_uuid body int true "Author uuid"
-// @Param name body string true "Author name"
-// @Success 200 {object} main.Author
-// @Router /update-author [put]
-func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRequest) (*proto.Author, error) {
-	authorUuid, name, currentTimestamp := request.GetAuthorUuid(), request.GetAuthorName(), time.Now().Format("2006-01-02 15:04:05")
-	updateQuery := `UPDATE authors SET name = ?, updated_at = ? WHERE uuid = ?`
-
-	_, err := db.Exec(updateQuery, name, currentTimestamp, authorUuid)
-	if err != nil {
-		return &proto.Author{
-			AuthorUuid: 0,
-			Name:       "",
-		}, err
-	}
-
-	return &proto.Author{
-		AuthorUuid: authorUuid,
-		Name:       name,
-	}, nil
-}
-
-// UpdateCategory godoc
-// @Summary Updates a category
-// @Description update a category using the PUT request
-// @ID update-category
-// @Accept  json
-// @Produce  json
-// @Param category_uuid body int true "Category uuid"
-// @Param name path string true "Category name"
-// @Param parent_uuid path string false "Parent id"
-// @Success 200 {object} main.Category
-// @Router /update-category [put]
-func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCategoryRequest) (*proto.Category, error) {
-	categoryId, name, parentUuid, currentTimestamp := request.GetCategoryUuid(), request.GetCategoryName(), request.GetParentUuid(), time.Now().Format("2006-01-02 15:04:05")
-	parentCategory := Category{}
-	updateQuery := `UPDATE categories SET name = ?, parent_uuid = ?, updated_at = ? WHERE uuid = ?`
-
-	_, err := db.Exec(updateQuery, name, parentUuid, currentTimestamp, categoryId)
-	if err != nil {
-		return &proto.Category{}, err
-	}
-	if parentUuid != "0" {
-		err := db.Get(&parentCategory, `SELECT name FROM categories WHERE uuid = ?`, parentUuid)
-		if err != nil {
-			return &proto.Category{}, err
-		}
-	}
-
-	return &proto.Category{
-		CategoryUuid: categoryId,
-		ParentName:   parentCategory.Name,
-		Name:         name,
-	}, nil
-}
-
 func (s *server) GetBookData(ctx context.Context, request *proto.BookId) (*proto.Book, error) {
 	bookUuid := request.GetBookUuid()
 
@@ -731,7 +793,7 @@ func (s *server) GetBookData(ctx context.Context, request *proto.BookId) (*proto
 func handleDatabase() {
 	authorsQuery := `CREATE TABLE IF NOT EXISTS authors (
         uuid INT PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(60) NOT NULL UNIQUE,
+        name VARCHAR(60) NOT NULL,
         created_at datetime default CURRENT_TIMESTAMP,
         updated_at datetime default CURRENT_TIMESTAMP,
         deleted_at datetime
@@ -741,7 +803,7 @@ func handleDatabase() {
 
 	booksQuery := `CREATE TABLE IF NOT EXISTS books (
         uuid INT PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(60) NOT NULL UNIQUE,
+        name VARCHAR(60) NOT NULL,
         author_uuid INT NOT NULL,
         created_at datetime default CURRENT_TIMESTAMP,
         updated_at datetime default CURRENT_TIMESTAMP,
@@ -753,7 +815,7 @@ func handleDatabase() {
 
 	categoriesQuery := `CREATE TABLE IF NOT EXISTS categories (
         uuid INT PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(60) NOT NULL UNIQUE,
+        name VARCHAR(60) NOT NULL,
         parent_uuid INT,
         created_at datetime default CURRENT_TIMESTAMP,
         updated_at datetime default CURRENT_TIMESTAMP,
