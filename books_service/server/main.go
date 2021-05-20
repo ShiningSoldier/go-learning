@@ -1,9 +1,10 @@
 package main
 
 import (
+	_ "../docs"
 	proto "../proto"
 	"context"
-	"database/sql"
+	_ "database/sql"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	_ "github.com/go-sql-driver/mysql"
@@ -40,10 +41,10 @@ type BooksCategories struct {
 }
 
 type Category struct {
-	Uuid        int            `json:"uuid"`
-	Name        string         `json:"name"`
-	Parent_uuid int            `json:"parent_uuid"`
-	Parent_name sql.NullString `json:"parent_name"`
+	Uuid        int    `json:"uuid"`
+	Name        string `json:"name"`
+	Parent_uuid int    `json:"parent_uuid"`
+	Parent_name string `json:"parent_name"`
 }
 
 func main() {
@@ -71,7 +72,7 @@ func main() {
 // @Summary Creates a new book
 // @Description create a book using the POST request
 // @ID add-book
-// @Accept  json
+// @Consume application/x-www-form-urlencoded
 // @Produce  json
 // @Param name formData string true "Book name"
 // @Param category_uuid formData string true "List of category iIDs"
@@ -119,7 +120,7 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 // @Summary Updates a book
 // @Description update a book using the PATCH request
 // @ID update-book
-// @Accept  json
+// @Consume application/x-www-form-urlencoded
 // @Produce  json
 // @Param book_uuid formData int true "Book uuid"
 // @Param name formData string false "Book name"
@@ -179,7 +180,7 @@ func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookReques
 // @Summary Updates an author
 // @Description update an author using the PATCH request
 // @ID update-author
-// @Accept  json
+// @Consume application/x-www-form-urlencoded
 // @Produce  json
 // @Param author_uuid formData int true "Author uuid"
 // @Param name formData string false "Author name"
@@ -211,7 +212,7 @@ func (s *server) UpdateAuthor(ctx context.Context, request *proto.UpdateAuthorRe
 // @Summary Updates a category
 // @Description update a category using the PUT request
 // @ID update-category
-// @Accept  json
+// @Consume application/x-www-form-urlencoded
 // @Produce  json
 // @Param category_uuid formData int true "Category uuid"
 // @Param name formData string false "Category name"
@@ -245,7 +246,7 @@ func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCatego
 	}
 
 	category := Category{}
-	selectQuery := `SELECT c.name, c.parent_uuid, c2.name AS parent_name
+	selectQuery := `SELECT c.name, c.parent_uuid, IFNULL(c2.name, "") AS parent_name
     FROM categories c
     LEFT JOIN categories c2 ON c.parent_uuid = c2.uuid
     WHERE c.deleted_at IS NULL AND c.uuid = ?`
@@ -256,7 +257,7 @@ func (s *server) UpdateCategory(ctx context.Context, request *proto.UpdateCatego
 
 	return &proto.Category{
 		CategoryUuid: categoryUuid,
-		ParentName:   category.Parent_name.String,
+		ParentName:   category.Parent_name,
 		Name:         name,
 	}, nil
 }
@@ -377,7 +378,7 @@ func getCategories(bookUuid int64) (string, error) {
 // @Summary Create a category
 // @Description creates a new category
 // @ID create-category
-// @Accept  json
+// @Consume application/x-www-form-urlencoded
 // @Produce  json
 // @Param name formData string true "Category name"
 // @Param parent_uuid formData string false "Parent id"
@@ -418,7 +419,7 @@ func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequ
 // @Summary Create an author
 // @Description creates a new author
 // @ID create-author
-// @Accept  json
+// @Consume application/x-www-form-urlencoded
 // @Produce  json
 // @Param name formData string true "Author name"
 // @Success 200 {object} main.Author
@@ -486,7 +487,7 @@ func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*
 	categoryUuid := request.GetCategoryUuid()
 	category := Category{}
 
-	selectQuery := `SELECT c.name, c.parent_uuid, c2.name AS parent_name
+	selectQuery := `SELECT c.name, c.parent_uuid, IFNULL(c2.name, "") AS parent_name
     FROM categories c
     LEFT JOIN categories c2 ON c.parent_uuid = c2.uuid
     WHERE c.deleted_at IS NULL AND c.uuid = ?`
@@ -498,7 +499,7 @@ func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*
 
 	return &proto.Category{
 		CategoryUuid: categoryUuid,
-		ParentName:   category.Parent_name.String,
+		ParentName:   category.Parent_name,
 		Name:         category.Name,
 	}, nil
 }
@@ -510,7 +511,7 @@ func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*
 // @Accept  json
 // @Produce  json
 // @Param author_uuid path int true "Author uuid"
-// @Success 200 {object} proto.Books
+// @Success 200 {object} main.Book
 // @Router /filter-by-author/{author_uuid} [get]
 func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*proto.Books, error) {
 	authorUuid := request.GetAuthorUuid()
@@ -685,7 +686,7 @@ func (s *server) PaginateCategories(ctx context.Context, request *proto.PageNumb
 	categories := []Category{}
 	response := []*proto.Category{}
 
-	selectQuery := `SELECT c.name, c.parent_uuid, c2.name AS parent_name
+	selectQuery := `SELECT c.name, c.parent_uuid, IFNULL(c2.name, "") AS parent_name
     FROM categories c
     LEFT JOIN categories c2 ON c.parent_uuid = c2.uuid
     WHERE c.deleted_at IS NULL LIMIT 10 OFFSET ?`
@@ -700,7 +701,7 @@ func (s *server) PaginateCategories(ctx context.Context, request *proto.PageNumb
 		ri := &proto.Category{
 			CategoryUuid: uuid,
 			Name:         item.Name,
-			ParentName:   item.Parent_name.String,
+			ParentName:   item.Parent_name,
 		}
 
 		response = append(response, ri)

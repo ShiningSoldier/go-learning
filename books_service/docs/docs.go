@@ -26,9 +26,6 @@ var doc = `{
         "/add": {
             "post": {
                 "description": "create a book using the POST request",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -36,38 +33,32 @@ var doc = `{
                 "operationId": "add-book",
                 "parameters": [
                     {
+                        "type": "string",
                         "description": "Book name",
                         "name": "name",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData",
+                        "required": true
                     },
                     {
+                        "type": "string",
                         "description": "List of category iIDs",
                         "name": "category_uuid",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData",
+                        "required": true
                     },
                     {
+                        "type": "integer",
                         "description": "Book author ID",
                         "name": "author_uuid",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "int"
+                            "$ref": "#/definitions/main.Book"
                         }
                     }
                 }
@@ -86,20 +77,18 @@ var doc = `{
                 "operationId": "create-author",
                 "parameters": [
                     {
+                        "type": "string",
                         "description": "Author name",
                         "name": "name",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "boolean"
+                            "$ref": "#/definitions/main.Author"
                         }
                     }
                 }
@@ -118,28 +107,24 @@ var doc = `{
                 "operationId": "create-category",
                 "parameters": [
                     {
+                        "type": "string",
                         "description": "Category name",
                         "name": "name",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData",
+                        "required": true
                     },
                     {
+                        "type": "string",
                         "description": "Parent id",
                         "name": "parent_uuid",
-                        "in": "body",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "boolean"
+                            "$ref": "#/definitions/main.Category"
                         }
                     }
                 }
@@ -259,7 +244,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.Book"
                         }
                     }
                 }
@@ -281,6 +266,66 @@ var doc = `{
                         "type": "integer",
                         "description": "Category uuid",
                         "name": "category_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/paginate-authors/{page_number}": {
+            "get": {
+                "description": "shows authors by pages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get authors",
+                "operationId": "paginate-authors",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page_number",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/paginate-categories/{page_number}": {
+            "get": {
+                "description": "shows categories by pages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get categories",
+                "operationId": "paginate-categories",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page_number",
                         "in": "path",
                         "required": true
                     }
@@ -349,7 +394,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.Author"
                         }
                     }
                 }
@@ -379,7 +424,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.Category"
                         }
                     }
                 }
@@ -409,15 +454,15 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "boolean"
+                            "$ref": "#/definitions/main.Book"
                         }
                     }
                 }
             }
         },
         "/update": {
-            "put": {
-                "description": "update a book using the PUT request",
+            "patch": {
+                "description": "update a book using the PATCH request",
                 "consumes": [
                     "application/json"
                 ],
@@ -428,55 +473,44 @@ var doc = `{
                 "operationId": "update-book",
                 "parameters": [
                     {
+                        "type": "integer",
                         "description": "Book uuid",
                         "name": "book_uuid",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
+                        "in": "formData",
+                        "required": true
                     },
                     {
+                        "type": "string",
                         "description": "Book name",
                         "name": "name",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData"
                     },
                     {
+                        "type": "string",
                         "description": "List of category iIDs",
                         "name": "category_uuid",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData"
                     },
                     {
+                        "type": "integer",
                         "description": "Book author ID",
                         "name": "author_uuid",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
+                        "in": "formData"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "boolean"
+                            "$ref": "#/definitions/main.Book"
                         }
                     }
                 }
             }
         },
         "/update-author": {
-            "put": {
-                "description": "update an author using the PUT request",
+            "patch": {
+                "description": "update an author using the PATCH request",
                 "consumes": [
                     "application/json"
                 ],
@@ -487,36 +521,31 @@ var doc = `{
                 "operationId": "update-author",
                 "parameters": [
                     {
+                        "type": "integer",
                         "description": "Author uuid",
                         "name": "author_uuid",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
+                        "in": "formData",
+                        "required": true
                     },
                     {
+                        "type": "string",
                         "description": "Author name",
                         "name": "name",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "boolean"
+                            "$ref": "#/definitions/main.Author"
                         }
                     }
                 }
             }
         },
         "/update-category": {
-            "put": {
+            "patch": {
                 "description": "update a category using the PUT request",
                 "consumes": [
                     "application/json"
@@ -528,36 +557,76 @@ var doc = `{
                 "operationId": "update-category",
                 "parameters": [
                     {
+                        "type": "integer",
                         "description": "Category uuid",
                         "name": "category_uuid",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
+                        "in": "formData",
+                        "required": true
                     },
                     {
                         "type": "string",
                         "description": "Category name",
                         "name": "name",
-                        "in": "path",
-                        "required": true
+                        "in": "formData"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Parent id",
                         "name": "parent_uuid",
-                        "in": "path",
-                        "required": true
+                        "in": "formData"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "boolean"
+                            "$ref": "#/definitions/main.Category"
                         }
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "main.Author": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "integer"
+                }
+            }
+        },
+        "main.Book": {
+            "type": "object",
+            "properties": {
+                "author_uuid": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "integer"
+                }
+            }
+        },
+        "main.Category": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "parent_name": {
+                    "type": "string"
+                },
+                "parent_uuid": {
+                    "type": "integer"
+                },
+                "uuid": {
+                    "type": "integer"
                 }
             }
         }
@@ -575,12 +644,12 @@ type swaggerInfo struct {
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
-	Version:     "1.0",
-	Host:        "localhost:8080",
-	BasePath:    "/",
+	Version:     "",
+	Host:        "",
+	BasePath:    "",
 	Schemes:     []string{},
-	Title:       "Books service api",
-	Description: "Allows to handle books",
+	Title:       "",
+	Description: "",
 }
 
 type s struct{}

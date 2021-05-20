@@ -1,43 +1,61 @@
-basePath: /
-host: localhost:8080
+definitions:
+  main.Author:
+    properties:
+      name:
+        type: string
+      uuid:
+        type: integer
+    type: object
+  main.Book:
+    properties:
+      author_uuid:
+        type: integer
+      name:
+        type: string
+      uuid:
+        type: integer
+    type: object
+  main.Category:
+    properties:
+      name:
+        type: string
+      parent_name:
+        type: string
+      parent_uuid:
+        type: integer
+      uuid:
+        type: integer
+    type: object
 info:
   contact: {}
-  description: Allows to handle books
-  title: Books service api
-  version: "1.0"
 paths:
   /add:
     post:
-      consumes:
-      - application/json
       description: create a book using the POST request
       operationId: add-book
       parameters:
       - description: Book name
-        in: body
+        in: formData
         name: name
         required: true
-        schema:
-          type: string
+        type: string
       - description: List of category iIDs
-        in: body
+        in: formData
         name: category_uuid
         required: true
-        schema:
-          type: string
+        type: string
       - description: Book author ID
-        in: body
+        in: formData
         name: author_uuid
         required: true
-        schema:
-          type: integer
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: int
+            $ref: '#/definitions/main.Book'
       summary: Creates a new book
   /add-author:
     post:
@@ -47,18 +65,17 @@ paths:
       operationId: create-author
       parameters:
       - description: Author name
-        in: body
+        in: formData
         name: name
         required: true
-        schema:
-          type: string
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: boolean
+            $ref: '#/definitions/main.Author'
       summary: Create an author
   /add-category:
     post:
@@ -68,23 +85,21 @@ paths:
       operationId: create-category
       parameters:
       - description: Category name
-        in: body
+        in: formData
         name: name
         required: true
-        schema:
-          type: string
+        type: string
       - description: Parent id
-        in: body
+        in: formData
         name: parent_uuid
-        schema:
-          type: string
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: boolean
+            $ref: '#/definitions/main.Category'
       summary: Create a category
   /delete-author/{author_uuid}:
     delete:
@@ -164,7 +179,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/main.Book'
       summary: Shows all books by specified author
   /filter-by-category/{category_uuid}:
     get:
@@ -186,6 +201,46 @@ paths:
           schema:
             type: string
       summary: Shows all books by specified category
+  /paginate-authors/{page_number}:
+    get:
+      consumes:
+      - application/json
+      description: shows authors by pages
+      operationId: paginate-authors
+      parameters:
+      - description: Page number
+        in: path
+        name: page_number
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Get authors
+  /paginate-categories/{page_number}:
+    get:
+      consumes:
+      - application/json
+      description: shows categories by pages
+      operationId: paginate-categories
+      parameters:
+      - description: Page number
+        in: path
+        name: page_number
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Get categories
   /paginate/{page_number}:
     get:
       consumes:
@@ -224,7 +279,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/main.Author'
       summary: Show author data
   /show-category/{category_uuid}:
     get:
@@ -244,7 +299,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/main.Category'
       summary: Show category data
   /show/{book_uuid}:
     get:
@@ -264,96 +319,31 @@ paths:
         "200":
           description: OK
           schema:
-            type: boolean
+            $ref: '#/definitions/main.Book'
       summary: Shows a book
   /update:
-    put:
+    patch:
       consumes:
       - application/json
-      description: update a book using the PUT request
+      description: update a book using the PATCH request
       operationId: update-book
       parameters:
       - description: Book uuid
-        in: body
+        in: formData
         name: book_uuid
         required: true
-        schema:
-          type: integer
+        type: integer
       - description: Book name
-        in: body
+        in: formData
         name: name
-        required: true
-        schema:
-          type: string
-      - description: List of category iIDs
-        in: body
-        name: category_uuid
-        required: true
-        schema:
-          type: string
-      - description: Book author ID
-        in: body
-        name: author_uuid
-        required: true
-        schema:
-          type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: boolean
-      summary: Updates a book
-  /update-author:
-    put:
-      consumes:
-      - application/json
-      description: update an author using the PUT request
-      operationId: update-author
-      parameters:
-      - description: Author uuid
-        in: body
-        name: author_uuid
-        required: true
-        schema:
-          type: integer
-      - description: Author name
-        in: body
-        name: name
-        required: true
-        schema:
-          type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: boolean
-      summary: Updates an author
-  /update-category:
-    put:
-      consumes:
-      - application/json
-      description: update a category using the PUT request
-      operationId: update-category
-      parameters:
-      - description: Category uuid
-        in: body
-        name: category_uuid
-        required: true
-        schema:
-          type: integer
-      - description: Category name
-        in: path
-        name: name
-        required: true
         type: string
-      - description: Parent id
-        in: path
-        name: parent_uuid
-        required: true
+      - description: List of category iIDs
+        in: formData
+        name: category_uuid
+        type: string
+      - description: Book author ID
+        in: formData
+        name: author_uuid
         type: integer
       produces:
       - application/json
@@ -361,6 +351,58 @@ paths:
         "200":
           description: OK
           schema:
-            type: boolean
+            $ref: '#/definitions/main.Book'
+      summary: Updates a book
+  /update-author:
+    patch:
+      consumes:
+      - application/json
+      description: update an author using the PATCH request
+      operationId: update-author
+      parameters:
+      - description: Author uuid
+        in: formData
+        name: author_uuid
+        required: true
+        type: integer
+      - description: Author name
+        in: formData
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.Author'
+      summary: Updates an author
+  /update-category:
+    patch:
+      consumes:
+      - application/json
+      description: update a category using the PUT request
+      operationId: update-category
+      parameters:
+      - description: Category uuid
+        in: formData
+        name: category_uuid
+        required: true
+        type: integer
+      - description: Category name
+        in: formData
+        name: name
+        type: string
+      - description: Parent id
+        in: formData
+        name: parent_uuid
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.Category'
       summary: Updates a category
 swagger: "2.0"
