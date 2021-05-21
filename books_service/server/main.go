@@ -5,6 +5,7 @@ import (
 	proto "../proto"
 	"context"
 	_ "database/sql"
+	"errors"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	_ "github.com/go-sql-driver/mysql"
@@ -426,6 +427,10 @@ func (s *server) AddCategory(ctx context.Context, request *proto.AddCategoryRequ
 // @Router /add-author [post]
 func (s *server) AddAuthor(ctx context.Context, request *proto.AddAuthorRequest) (*proto.Author, error) {
 	name := request.GetName()
+	if len(name) == 0 {
+		err := errors.New("name field is empty")
+		return &proto.Author{}, err
+	}
 	insertQuery := `INSERT INTO authors(name) VALUES(?)`
 
 	row, err := db.Exec(insertQuery, name)
@@ -554,7 +559,7 @@ func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*
 // @Accept  json
 // @Produce  json
 // @Param category_uuid path int true "Category uuid"
-// @Success 200 {object} string
+// @Success 200 {object} main.Category
 // @Router /filter-by-category/{category_uuid} [get]
 func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId) (*proto.Books, error) {
 	categoryUuid := request.GetCategoryUuid()
@@ -597,7 +602,7 @@ func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId
 // @Accept  json
 // @Produce  json
 // @Param page_number path int true "Page number"
-// @Success 200 {object} string
+// @Success 200 {object} main.Book
 // @Router /paginate/{page_number} [get]
 func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*proto.Books, error) {
 	pageNumber := request.GetPageNumber()
@@ -641,7 +646,7 @@ func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*prot
 // @Accept  json
 // @Produce  json
 // @Param page_number path int true "Page number"
-// @Success 200 {object} string
+// @Success 200 {object} main.Author
 // @Router /paginate-authors/{page_number} [get]
 func (s *server) PaginateAuthors(ctx context.Context, request *proto.PageNumber) (*proto.Authors, error) {
 	pageNumber := request.GetPageNumber()
@@ -678,7 +683,7 @@ func (s *server) PaginateAuthors(ctx context.Context, request *proto.PageNumber)
 // @Accept  json
 // @Produce  json
 // @Param page_number path int true "Page number"
-// @Success 200 {object} string
+// @Success 200 {object} main.Category
 // @Router /paginate-categories/{page_number} [get]
 func (s *server) PaginateCategories(ctx context.Context, request *proto.PageNumber) (*proto.Categories, error) {
 	pageNumber := request.GetPageNumber()
@@ -764,7 +769,7 @@ func deleteBookCategoriesLinking(bookUuid int64) error {
 // @Produce  json
 // @Param category_uuid path int true "Category uuid"
 // @Success 200 {object} bool
-// @Router /delete-category/{delete_category} [delete]
+// @Router /delete-category/{category_uuid} [delete]
 func (s *server) DeleteCategory(ctx context.Context, request *proto.CategoryId) (*proto.Response, error) {
 	categoryUuid := request.GetCategoryUuid()
 

@@ -67,9 +67,6 @@ var doc = `{
         "/add-author": {
             "post": {
                 "description": "creates a new author",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -97,9 +94,6 @@ var doc = `{
         "/add-category": {
             "post": {
                 "description": "creates a new category",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -160,7 +154,7 @@ var doc = `{
                 }
             }
         },
-        "/delete-category/{delete_category}": {
+        "/delete-category/{category_uuid}": {
             "delete": {
                 "description": "delete a category using the DELETE request",
                 "consumes": [
@@ -274,7 +268,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.Category"
                         }
                     }
                 }
@@ -304,7 +298,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.Author"
                         }
                     }
                 }
@@ -334,7 +328,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.Category"
                         }
                     }
                 }
@@ -364,7 +358,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.Book"
                         }
                     }
                 }
@@ -463,9 +457,6 @@ var doc = `{
         "/update": {
             "patch": {
                 "description": "update a book using the PATCH request",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -511,9 +502,6 @@ var doc = `{
         "/update-author": {
             "patch": {
                 "description": "update an author using the PATCH request",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -547,9 +535,6 @@ var doc = `{
         "/update-category": {
             "patch": {
                 "description": "update a category using the PUT request",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],

@@ -59,8 +59,6 @@ paths:
       summary: Creates a new book
   /add-author:
     post:
-      consumes:
-      - application/json
       description: creates a new author
       operationId: create-author
       parameters:
@@ -79,8 +77,6 @@ paths:
       summary: Create an author
   /add-category:
     post:
-      consumes:
-      - application/json
       description: creates a new category
       operationId: create-category
       parameters:
@@ -121,7 +117,7 @@ paths:
           schema:
             type: boolean
       summary: Deletes an author
-  /delete-category/{delete_category}:
+  /delete-category/{category_uuid}:
     delete:
       consumes:
       - application/json
@@ -199,7 +195,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/main.Category'
       summary: Shows all books by specified category
   /paginate-authors/{page_number}:
     get:
@@ -219,7 +215,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/main.Author'
       summary: Get authors
   /paginate-categories/{page_number}:
     get:
@@ -239,7 +235,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/main.Category'
       summary: Get categories
   /paginate/{page_number}:
     get:
@@ -259,7 +255,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/main.Book'
       summary: Paginate books
   /show-author/{author_uuid}:
     get:
@@ -323,8 +319,6 @@ paths:
       summary: Shows a book
   /update:
     patch:
-      consumes:
-      - application/json
       description: update a book using the PATCH request
       operationId: update-book
       parameters:
@@ -355,8 +349,6 @@ paths:
       summary: Updates a book
   /update-author:
     patch:
-      consumes:
-      - application/json
       description: update an author using the PATCH request
       operationId: update-author
       parameters:
@@ -379,8 +371,6 @@ paths:
       summary: Updates an author
   /update-category:
     patch:
-      consumes:
-      - application/json
       description: update a category using the PUT request
       operationId: update-category
       parameters:
