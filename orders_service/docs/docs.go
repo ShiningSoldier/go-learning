@@ -57,6 +57,36 @@ var doc = `{
                 }
             }
         },
+        "/paginate/{page_number}": {
+            "get": {
+                "description": "allows to show all pages by page number",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Show order by page number",
+                "operationId": "paginate",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page_number",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.Order"
+                        }
+                    }
+                }
+            }
+        },
         "/show/{order_uuid}": {
             "get": {
                 "description": "shows the basic information about the specific order",
@@ -117,12 +147,12 @@ type swaggerInfo struct {
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
-	Version:     "1.0",
-	Host:        "localhost:8081",
-	BasePath:    "/",
+	Version:     "",
+	Host:        "",
+	BasePath:    "",
 	Schemes:     []string{},
-	Title:       "Orders service api",
-	Description: "Allows to create orders",
+	Title:       "",
+	Description: "",
 }
 
 type s struct{}

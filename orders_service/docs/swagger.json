@@ -1,13 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Allows to create orders",
-        "title": "Orders service api",
-        "contact": {},
-        "version": "1.0"
+        "contact": {}
     },
-    "host": "localhost:8081",
-    "basePath": "/",
     "paths": {
         "/create-order": {
             "post": {
@@ -30,6 +25,36 @@
                         "description": "Author name",
                         "name": "description",
                         "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.Order"
+                        }
+                    }
+                }
+            }
+        },
+        "/paginate/{page_number}": {
+            "get": {
+                "description": "allows to show all pages by page number",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Show order by page number",
+                "operationId": "paginate",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page_number",
+                        "in": "path",
                         "required": true
                     }
                 ],

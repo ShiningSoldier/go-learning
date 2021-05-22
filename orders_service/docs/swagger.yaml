@@ -1,4 +1,3 @@
-basePath: /
 definitions:
   main.Order:
     properties:
@@ -9,12 +8,8 @@ definitions:
       uuid:
         type: integer
     type: object
-host: localhost:8081
 info:
   contact: {}
-  description: Allows to create orders
-  title: Orders service api
-  version: "1.0"
 paths:
   /create-order:
     post:
@@ -39,6 +34,26 @@ paths:
           schema:
             $ref: '#/definitions/main.Order'
       summary: Created an order
+  /paginate/{page_number}:
+    get:
+      consumes:
+      - application/json
+      description: allows to show all pages by page number
+      operationId: paginate
+      parameters:
+      - description: Page number
+        in: path
+        name: page_number
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.Order'
+      summary: Show order by page number
   /show/{order_uuid}:
     get:
       consumes:

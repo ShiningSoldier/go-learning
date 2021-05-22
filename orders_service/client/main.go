@@ -63,6 +63,23 @@ func main() {
 		}
 	})
 
+	g.GET("/paginate/:page_number", func(ctx *gin.Context) {
+		pageNumber, err := strconv.ParseUint(ctx.Param("page_number"), 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param page_number"})
+		}
+
+		req := &proto.PageNumber{PageNumber: int64(pageNumber)}
+
+		if response, err := client.Paginate(ctx, req); err == nil {
+			ctx.JSON(http.StatusOK, gin.H{
+				"result": response,
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+
 	g.GET("/show/:order_uuid", func(ctx *gin.Context) {
 		orderUuid, err := strconv.ParseUint(ctx.Param("order_uuid"), 10, 64)
 		if err != nil {

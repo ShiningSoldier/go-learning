@@ -12,6 +12,10 @@ message OrderId {
   int64 order_uuid = 1;
 }
 
+message Orders {
+  repeated Order order = 1;
+}
+
 message Order {
   int64 order_uuid = 1;
   int64 book_uuid = 2;
@@ -30,9 +34,14 @@ message BookId {
   int64 book_uuid = 1;
 }
 
+message PageNumber {
+  int64 page_number = 1;
+}
+
 service OrdersService {
   rpc CreateOrder(CreateOrderRequest) returns (Order);
   rpc GetOrderData(OrderId) returns (Order);
+  rpc Paginate(PageNumber) returns (Orders);
 }
 
 service BooksService {

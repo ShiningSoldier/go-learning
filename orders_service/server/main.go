@@ -75,6 +75,43 @@ func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequ
 	}, nil
 }
 
+// Paginate godoc
+// @Summary Show order by page number
+// @Description allows to show all pages by page number
+// @ID paginate
+// @Accept  json
+// @Produce  json
+// @Param page_number path int true "Page number"
+// @Success 200 {object} main.Order
+// @Router /paginate/{page_number} [get]
+func (s *server) Paginate(ctx context.Context, request *proto.PageNumber) (*proto.Orders, error) {
+	pageNumber := request.GetPageNumber()
+	offset := (pageNumber - 1) * 10
+	orders := []Order{}
+	response := []*proto.Order{}
+
+	selectQuery := `SELECT uuid, book_uuid, description
+    FROM orders
+    WHERE deleted_at IS NULL LIMIT 10 OFFSET ?`
+
+	err := db.Select(&orders, selectQuery, offset)
+	if err != nil {
+		return &proto.Orders{}, err
+	}
+
+	for _, item := range orders {
+		ri := &proto.Order{
+			OrderUuid:   item.Uuid,
+			BookUuid:    item.Book_uuid,
+			Description: item.Description,
+		}
+
+		response = append(response, ri)
+	}
+
+	return &proto.Orders{Order: response}, nil
+}
+
 // GetOrderData godoc
 // @Summary Get the specific order data
 // @Description shows the basic information about the specific order
