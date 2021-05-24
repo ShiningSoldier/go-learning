@@ -691,7 +691,7 @@ func (s *server) PaginateCategories(ctx context.Context, request *proto.PageNumb
 	categories := []Category{}
 	response := []*proto.Category{}
 
-	selectQuery := `SELECT c.name, c.parent_uuid, IFNULL(c2.name, "") AS parent_name
+	selectQuery := `SELECT c.uuid, c.name, c.parent_uuid, IFNULL(c2.name, "") AS parent_name
     FROM categories c
     LEFT JOIN categories c2 ON c.parent_uuid = c2.uuid
     WHERE c.deleted_at IS NULL LIMIT 10 OFFSET ?`
