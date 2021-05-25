@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -82,6 +83,11 @@ func main() {
 // @Router /add [post]
 func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*proto.Book, error) {
 	name, category, author := request.GetBookName(), request.GetCategoryId(), request.GetAuthorId()
+	category, err := sanitizeCategories(category)
+	if err != nil {
+		return &proto.Book{}, err
+	}
+
 	categoriesSlice := strings.Split(category, ",")
 	insertQuery := `INSERT INTO books(name, author_uuid) VALUES(?,?)`
 
@@ -117,6 +123,21 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 	}, nil
 }
 
+func sanitizeCategories(categoriesString string) (string, error) {
+	reg, err := regexp.Compile("[^0-9,]")
+	if err != nil {
+		return "", err
+	}
+
+	processedString := reg.ReplaceAllString(categoriesString, "")
+	if len(processedString) == 0 {
+		err := errors.New("name field is empty")
+		return "", err
+	}
+
+	return processedString, nil
+}
+
 // UpdateBook godoc
 // @Summary Updates a book
 // @Description update a book using the PATCH request
@@ -144,6 +165,10 @@ func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookReques
 		}
 
 		if len(category) > 0 {
+			category, err = sanitizeCategories(category)
+			if err != nil {
+				return &proto.Book{}, err
+			}
 			categoriesSlice := strings.Split(category, ",")
 			err = addCategories(bookUuid, categoriesSlice)
 			if err != nil {
