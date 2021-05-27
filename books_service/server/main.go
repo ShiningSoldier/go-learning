@@ -77,13 +77,13 @@ func main() {
 // @Consume application/x-www-form-urlencoded
 // @Produce  json
 // @Param name formData string true "Book name"
-// @Param category_uuid formData string true "List of category iIDs"
+// @Param category_uuid formData string true "List of category IDs"
 // @Param author_uuid formData int true "Book author ID"
 // @Success 200 {object} main.Book
 // @Router /add [post]
 func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*proto.Book, error) {
 	name, category, author := request.GetBookName(), request.GetCategoryId(), request.GetAuthorId()
-	category, err := sanitizeCategories(category)
+	category, err := sanitizeNumbers(category)
 	if err != nil {
 		return &proto.Book{}, err
 	}
@@ -123,15 +123,15 @@ func (s *server) AddBook(ctx context.Context, request *proto.AddBookRequest) (*p
 	}, nil
 }
 
-func sanitizeCategories(categoriesString string) (string, error) {
+func sanitizeNumbers(numbersString string) (string, error) {
 	reg, err := regexp.Compile("[^0-9,]")
 	if err != nil {
 		return "", err
 	}
 
-	processedString := reg.ReplaceAllString(categoriesString, "")
+	processedString := reg.ReplaceAllString(numbersString, "")
 	if len(processedString) == 0 {
-		err := errors.New("name field is empty")
+		err := errors.New("Incorrect value")
 		return "", err
 	}
 
@@ -165,7 +165,7 @@ func (s *server) UpdateBook(ctx context.Context, request *proto.UpdateBookReques
 		}
 
 		if len(category) > 0 {
-			category, err = sanitizeCategories(category)
+			category, err = sanitizeNumbers(category)
 			if err != nil {
 				return &proto.Book{}, err
 			}
@@ -538,22 +538,33 @@ func (s *server) ShowCategory(ctx context.Context, request *proto.CategoryId) (*
 // @Summary Shows all books by specified author
 // @Description shows the basic data of books by author
 // @ID filter-by-author
-// @Accept  json
+// @Consume application/x-www-form-urlencoded
 // @Produce  json
-// @Param author_uuid path int true "Author uuid"
+// @Param author_uuids formData string true "String with author uuids, divided by comma"
 // @Success 200 {object} main.Book
-// @Router /filter-by-author/{author_uuid} [get]
-func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*proto.Books, error) {
-	authorUuid := request.GetAuthorUuid()
+// @Router /filter-by-author [post]
+func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorIds) (*proto.Books, error) {
+	authorUuids := request.GetAuthorUuids()
+	authorUuids, err = sanitizeNumbers(authorUuids)
+	if err != nil {
+		return &proto.Books{}, err
+	}
+	authorsSlice := strings.Split(authorUuids, ",")
+
 	books := []Book{}
 	response := []*proto.Book{}
 
 	selectQuery := `SELECT books.uuid, books.name, authors.name "authors.name"
     FROM books
     INNER JOIN authors ON authors.uuid = books.author_uuid
-    WHERE books.deleted_at IS NULL AND books.author_uuid = ?`
+    WHERE books.deleted_at IS NULL AND books.author_uuid IN (?)`
 
-	err := db.Select(&books, selectQuery, authorUuid)
+	q, args, err := sqlx.In(selectQuery, authorsSlice)
+	if err != nil {
+		return &proto.Books{}, err
+	}
+
+	err = db.Select(&books, q, args...)
 	if err != nil {
 		return &proto.Books{}, err
 	}
@@ -581,22 +592,34 @@ func (s *server) FilterByAuthor(ctx context.Context, request *proto.AuthorId) (*
 // @Summary Shows all books by specified category
 // @Description shows the basic data of books by category
 // @ID filter-by-category
-// @Accept  json
+// @Consume application/x-www-form-urlencoded
 // @Produce  json
-// @Param category_uuid path int true "Category uuid"
+// @Param category_uuids formData string true "String with category uuids, divided by comma"
 // @Success 200 {object} main.Category
-// @Router /filter-by-category/{category_uuid} [get]
-func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryId) (*proto.Books, error) {
-	categoryUuid := request.GetCategoryUuid()
+// @Router /filter-by-category [post]
+func (s *server) FilterByCategory(ctx context.Context, request *proto.CategoryIds) (*proto.Books, error) {
+	categoryUuids := request.GetCategoryUuids()
+	categoryUuids, err = sanitizeNumbers(categoryUuids)
+	if err != nil {
+		return &proto.Books{}, err
+	}
+
 	books := []Book{}
 	response := []*proto.Book{}
+
+	categoriesSlice := strings.Split(categoryUuids, ",")
 
 	selectQuery := `SELECT books.uuid, books.name, authors.name "authors.name" FROM books
     INNER JOIN authors ON authors.uuid = books.author_uuid
     INNER JOIN books_categories ON books_categories.book_uuid = books.uuid
-    WHERE books.deleted_at IS NULL AND books_categories.category_uuid = ?`
+    WHERE books.deleted_at IS NULL AND books_categories.category_uuid IN (?)`
 
-	err := db.Select(&books, selectQuery, categoryUuid)
+	q, args, err := sqlx.In(selectQuery, categoriesSlice)
+	if err != nil {
+		return &proto.Books{}, err
+	}
+
+	err = db.Select(&books, q, args...)
 	if err != nil {
 		return &proto.Books{}, err
 	}

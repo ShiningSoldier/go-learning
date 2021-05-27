@@ -74,8 +74,16 @@ message AuthorId {
   int64 author_uuid = 1;
 }
 
+message AuthorIds {
+  string author_uuids = 1;
+}
+
 message CategoryId {
   int64 category_uuid = 1;
+}
+
+message CategoryIds {
+  string category_uuids = 1;
 }
 
 message PageNumber {
@@ -99,8 +107,8 @@ service BooksService {
   rpc ShowBook(BookId) returns (Book);
   rpc ShowAuthor(AuthorId) returns (Author);
   rpc ShowCategory(CategoryId) returns (Category);
-  rpc FilterByAuthor(AuthorId) returns (Books);
-  rpc FilterByCategory(CategoryId) returns (Books);
+  rpc FilterByAuthor(AuthorIds) returns (Books);
+  rpc FilterByCategory(CategoryIds) returns (Books);
   rpc Paginate(PageNumber) returns (Books);
   rpc PaginateAuthors(PageNumber) returns (Authors);
   rpc PaginateCategories(PageNumber) returns (Categories);

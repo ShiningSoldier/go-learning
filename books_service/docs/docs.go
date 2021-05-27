@@ -214,12 +214,9 @@ var doc = `{
                 }
             }
         },
-        "/filter-by-author/{author_uuid}": {
-            "get": {
+        "/filter-by-author": {
+            "post": {
                 "description": "shows the basic data of books by author",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -227,10 +224,10 @@ var doc = `{
                 "operationId": "filter-by-author",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Author uuid",
-                        "name": "author_uuid",
-                        "in": "path",
+                        "type": "string",
+                        "description": "String with author uuids, divided by comma",
+                        "name": "author_uuids",
+                        "in": "formData",
                         "required": true
                     }
                 ],
@@ -244,12 +241,9 @@ var doc = `{
                 }
             }
         },
-        "/filter-by-category/{category_uuid}": {
-            "get": {
+        "/filter-by-category": {
+            "post": {
                 "description": "shows the basic data of books by category",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -257,10 +251,10 @@ var doc = `{
                 "operationId": "filter-by-category",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Category uuid",
-                        "name": "category_uuid",
-                        "in": "path",
+                        "type": "string",
+                        "description": "String with category uuids, divided by comma",
+                        "name": "category_uuids",
+                        "in": "formData",
                         "required": true
                     }
                 ],

@@ -176,13 +176,10 @@ func main() {
 		}
 	})
 
-	g.GET("/filter-by-author/:author_uuid", func(ctx *gin.Context) {
-		authorUuid, err := strconv.ParseUint(ctx.Param("author_uuid"), 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param author_uuid"})
-		}
+	g.POST("/filter-by-author", func(ctx *gin.Context) {
+		authorUuids := ctx.PostForm("author_uuids")
 
-		req := &proto.AuthorId{AuthorUuid: int64(authorUuid)}
+		req := &proto.AuthorIds{AuthorUuids: authorUuids}
 
 		if response, err := client.FilterByAuthor(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{
@@ -193,13 +190,10 @@ func main() {
 		}
 	})
 
-	g.GET("/filter-by-category/:category_uuid", func(ctx *gin.Context) {
-		categoryUuid, err := strconv.ParseUint(ctx.Param("category_uuid"), 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid param author_uuid"})
-		}
+	g.POST("/filter-by-category", func(ctx *gin.Context) {
+		categoryUuids := ctx.PostForm("category_uuids")
 
-		req := &proto.CategoryId{CategoryUuid: int64(categoryUuid)}
+		req := &proto.CategoryIds{CategoryUuids: categoryUuids}
 
 		if response, err := client.FilterByCategory(ctx, req); err == nil {
 			ctx.JSON(http.StatusOK, gin.H{

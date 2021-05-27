@@ -34,14 +34,14 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Book uuid",
+                        "description": "The uuid of the book you want to order",
                         "name": "book_uuid",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Author name",
+                        "description": "The description of your order",
                         "name": "description",
                         "in": "formData",
                         "required": true

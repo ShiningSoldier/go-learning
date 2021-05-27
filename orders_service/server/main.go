@@ -50,8 +50,8 @@ func main() {
 // @ID create-order
 // @Consume application/x-www-form-urlencoded
 // @Produce  json
-// @Param book_uuid formData int true "Book uuid"
-// @Param description formData string true "Author name"
+// @Param book_uuid formData int true "The uuid of the book you want to order"
+// @Param description formData string true "The description of your order"
 // @Success 200 {object} main.Order
 // @Router /create-order [post]
 func (s *server) CreateOrder(ctx context.Context, request *proto.CreateOrderRequest) (*proto.Order, error) {

@@ -30,8 +30,8 @@ type BooksServiceClient interface {
 	ShowBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*Book, error)
 	ShowAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*Author, error)
 	ShowCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*Category, error)
-	FilterByAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*Books, error)
-	FilterByCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*Books, error)
+	FilterByAuthor(ctx context.Context, in *AuthorIds, opts ...grpc.CallOption) (*Books, error)
+	FilterByCategory(ctx context.Context, in *CategoryIds, opts ...grpc.CallOption) (*Books, error)
 	Paginate(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (*Books, error)
 	PaginateAuthors(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (*Authors, error)
 	PaginateCategories(ctx context.Context, in *PageNumber, opts ...grpc.CallOption) (*Categories, error)
@@ -153,7 +153,7 @@ func (c *booksServiceClient) ShowCategory(ctx context.Context, in *CategoryId, o
 	return out, nil
 }
 
-func (c *booksServiceClient) FilterByAuthor(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*Books, error) {
+func (c *booksServiceClient) FilterByAuthor(ctx context.Context, in *AuthorIds, opts ...grpc.CallOption) (*Books, error) {
 	out := new(Books)
 	err := c.cc.Invoke(ctx, "/proto.BooksService/FilterByAuthor", in, out, opts...)
 	if err != nil {
@@ -162,7 +162,7 @@ func (c *booksServiceClient) FilterByAuthor(ctx context.Context, in *AuthorId, o
 	return out, nil
 }
 
-func (c *booksServiceClient) FilterByCategory(ctx context.Context, in *CategoryId, opts ...grpc.CallOption) (*Books, error) {
+func (c *booksServiceClient) FilterByCategory(ctx context.Context, in *CategoryIds, opts ...grpc.CallOption) (*Books, error) {
 	out := new(Books)
 	err := c.cc.Invoke(ctx, "/proto.BooksService/FilterByCategory", in, out, opts...)
 	if err != nil {
@@ -214,8 +214,8 @@ type BooksServiceServer interface {
 	ShowBook(context.Context, *BookId) (*Book, error)
 	ShowAuthor(context.Context, *AuthorId) (*Author, error)
 	ShowCategory(context.Context, *CategoryId) (*Category, error)
-	FilterByAuthor(context.Context, *AuthorId) (*Books, error)
-	FilterByCategory(context.Context, *CategoryId) (*Books, error)
+	FilterByAuthor(context.Context, *AuthorIds) (*Books, error)
+	FilterByCategory(context.Context, *CategoryIds) (*Books, error)
 	Paginate(context.Context, *PageNumber) (*Books, error)
 	PaginateAuthors(context.Context, *PageNumber) (*Authors, error)
 	PaginateCategories(context.Context, *PageNumber) (*Categories, error)
@@ -262,10 +262,10 @@ func (UnimplementedBooksServiceServer) ShowAuthor(context.Context, *AuthorId) (*
 func (UnimplementedBooksServiceServer) ShowCategory(context.Context, *CategoryId) (*Category, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShowCategory not implemented")
 }
-func (UnimplementedBooksServiceServer) FilterByAuthor(context.Context, *AuthorId) (*Books, error) {
+func (UnimplementedBooksServiceServer) FilterByAuthor(context.Context, *AuthorIds) (*Books, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FilterByAuthor not implemented")
 }
-func (UnimplementedBooksServiceServer) FilterByCategory(context.Context, *CategoryId) (*Books, error) {
+func (UnimplementedBooksServiceServer) FilterByCategory(context.Context, *CategoryIds) (*Books, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FilterByCategory not implemented")
 }
 func (UnimplementedBooksServiceServer) Paginate(context.Context, *PageNumber) (*Books, error) {
@@ -507,7 +507,7 @@ func _BooksService_ShowCategory_Handler(srv interface{}, ctx context.Context, de
 }
 
 func _BooksService_FilterByAuthor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthorId)
+	in := new(AuthorIds)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -519,13 +519,13 @@ func _BooksService_FilterByAuthor_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/proto.BooksService/FilterByAuthor",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BooksServiceServer).FilterByAuthor(ctx, req.(*AuthorId))
+		return srv.(BooksServiceServer).FilterByAuthor(ctx, req.(*AuthorIds))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _BooksService_FilterByCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CategoryId)
+	in := new(CategoryIds)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -537,7 +537,7 @@ func _BooksService_FilterByCategory_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/proto.BooksService/FilterByCategory",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BooksServiceServer).FilterByCategory(ctx, req.(*CategoryId))
+		return srv.(BooksServiceServer).FilterByCategory(ctx, req.(*CategoryIds))
 	}
 	return interceptor(ctx, in, info, handler)
 }

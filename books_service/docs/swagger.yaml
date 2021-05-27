@@ -157,18 +157,16 @@ paths:
           schema:
             type: boolean
       summary: Deletes a book
-  /filter-by-author/{author_uuid}:
-    get:
-      consumes:
-      - application/json
+  /filter-by-author:
+    post:
       description: shows the basic data of books by author
       operationId: filter-by-author
       parameters:
-      - description: Author uuid
-        in: path
-        name: author_uuid
+      - description: String with author uuids, divided by comma
+        in: formData
+        name: author_uuids
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -177,18 +175,16 @@ paths:
           schema:
             $ref: '#/definitions/main.Book'
       summary: Shows all books by specified author
-  /filter-by-category/{category_uuid}:
-    get:
-      consumes:
-      - application/json
+  /filter-by-category:
+    post:
       description: shows the basic data of books by category
       operationId: filter-by-category
       parameters:
-      - description: Category uuid
-        in: path
-        name: category_uuid
+      - description: String with category uuids, divided by comma
+        in: formData
+        name: category_uuids
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:

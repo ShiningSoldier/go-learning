@@ -16,12 +16,12 @@ paths:
       description: allows to buy a book and return the information about it
       operationId: create-order
       parameters:
-      - description: Book uuid
+      - description: The uuid of the book you want to order
         in: formData
         name: book_uuid
         required: true
         type: integer
-      - description: Author name
+      - description: The description of your order
         in: formData
         name: description
         required: true
